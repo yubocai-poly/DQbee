@@ -5,6 +5,7 @@ from typing import List, Iterable
 import AST_walk as ast
 from SymbolsHolder import SymbolsHolder, make_derivative_symbol
 from sympy import init_printing
+from sympy import symbols
 import Combinations as comb
 
 import sympy as sp
@@ -34,6 +35,8 @@ class EquationSystem:
             system)
         self.VSquare = self.get_VSquare(system) | self.variables
         self.NSquare = self.all_terms_RHS - (self.VSquare & self.all_terms_RHS)
+        self.degree = comb.max_degree_monomial(self.all_terms_RHS)
+        self.dimension = len(self.variables)
 
     @property
     def righthand(self):
@@ -86,11 +89,17 @@ class EquationSystem:
     def find_constant_coefficient(self, term):
         constant_terms = set()
         decomposition = term.expand().as_ordered_factors()
-        print(decomposition)
         for factor in decomposition:
             if factor in self._constants:
                 constant_terms.add(factor)
         return constant_terms
+    
+    def find_number_coefficient(self, term):
+        num_coefficient = 1
+        for key, value in term.as_coefficients_dict().items():
+            num_coefficient = value
+            break
+        return num_coefficient
 
     def get_all_terms_RHS(self, system):
         all_terms_RHS = set()
@@ -98,7 +107,7 @@ class EquationSystem:
             rhs = eq.rhs
             for term in rhs.args:
                 # Here we use combinations to find all the terms in RHS, we first
-                term_dict = comb.polynomial_to_dict(term)
+                term_dict = term.as_powers_dict()
                 list_of_terms = []
                 for key in term_dict:
                     if key in self.variables:
@@ -107,4 +116,5 @@ class EquationSystem:
                 all_terms_RHS.add(reduce(lambda x, y: x * y, list_of_terms))
 
         return all_terms_RHS
+
     
