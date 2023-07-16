@@ -2,9 +2,10 @@ import sympy as sp
 
 from functools import reduce
 from typing import List, Iterable
-from AST_walk import find_non_polynomial
+import AST_walk as ast
 from SymbolsHolder import SymbolsHolder, make_derivative_symbol
 from sympy import init_printing
+import Combinations as comb
 
 import sympy as sp
 
@@ -14,6 +15,11 @@ class EquationSystem:
         self._righthand = []
         self._variables = set()
         self._constants = set()
+
+        self.is_poly = self.check_is_polynomial_system(system)
+
+        if self.is_poly is False:
+            raise ValueError("The system is not a polynomial system, please enter a polynomial system.")
 
         for eq in system:
             self._righthand.append(eq.rhs)
@@ -26,8 +32,8 @@ class EquationSystem:
         # build the dictionary of variables and equations
         self._dict_variables_equations = self.get_dict_variables_equations(
             system)
-
-        self.VSquare = self.get_VSquare(system)
+        self.VSquare = self.get_VSquare(system) | self.variables
+        self.NSquare = self.all_terms_RHS - (self.VSquare & self.all_terms_RHS)
 
     @property
     def righthand(self):
@@ -44,6 +50,12 @@ class EquationSystem:
     @property
     def dict_variables_equations(self):
         return self._dict_variables_equations
+    
+    def check_is_polynomial_system(self, system):
+        for eq in system:
+            if ast.is_polynomial_function_all(eq.rhs) is not True:
+                return False
+        return True
 
     def print_system_latex(self, system):
         latex_system = []
@@ -70,10 +82,11 @@ class EquationSystem:
                 VSquare.add(variables[i] * variables[j])
 
         return VSquare
-    
+
     def find_constant_coefficient(self, term):
         constant_terms = set()
-        decomposition = term.as_ordered_factors()
+        decomposition = term.expand().as_ordered_factors()
+        print(decomposition)
         for factor in decomposition:
             if factor in self._constants:
                 constant_terms.add(factor)
@@ -84,12 +97,14 @@ class EquationSystem:
         for eq in system:
             rhs = eq.rhs
             for term in rhs.args:
-                # Here we only want to keep the terms with the constant coefficient, which get off the term in self._constants
-                constant_terms = self.find_constant_coefficient(term)
-                if constant_terms:
-                    all_terms_RHS.add(term / reduce(lambda x, y: x * y, constant_terms))
-                else:
-                    all_terms_RHS.add(term)
+                # Here we use combinations to find all the terms in RHS, we first
+                term_dict = comb.polynomial_to_dict(term)
+                list_of_terms = []
+                for key in term_dict:
+                    if key in self.variables:
+                        list_of_terms.append(key**term_dict[key])
+
+                all_terms_RHS.add(reduce(lambda x, y: x * y, list_of_terms))
 
         return all_terms_RHS
-
+    
