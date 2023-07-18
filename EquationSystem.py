@@ -29,12 +29,14 @@ class EquationSystem:
 
         self._constants = self._constants - self._variables
         self.all_terms_RHS = self.get_all_terms_RHS(system)
+        self.V = self._variables | {1}
 
         # build the dictionary of variables and equations
         self._dict_variables_equations = self.get_dict_variables_equations(
             system)
         self.VSquare = self.get_VSquare(system) | self.variables
         self.NSquare = self.all_terms_RHS - (self.VSquare & self.all_terms_RHS)
+        self.NQuadratic = comb.get_all_nonquadratic(self.V)
         self.degree = comb.max_degree_monomial(self.all_terms_RHS)
         self.dimension = len(self.variables)
 
@@ -105,14 +107,13 @@ class EquationSystem:
         all_terms_RHS = set()
         for eq in system:
             rhs = eq.rhs
-            for term in rhs.args:
+            for term in sp.expand(rhs).as_ordered_terms():
                 # Here we use combinations to find all the terms in RHS, we first
                 term_dict = term.as_powers_dict()
                 list_of_terms = []
                 for key in term_dict:
                     if key in self.variables:
                         list_of_terms.append(key**term_dict[key])
-
                 all_terms_RHS.add(reduce(lambda x, y: x * y, list_of_terms))
 
         return all_terms_RHS

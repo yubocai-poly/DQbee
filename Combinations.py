@@ -14,6 +14,12 @@ def score_function(polynomial):
     return num
 
 
+def degree_function(polynomial):
+    if polynomial.is_constant():
+        return 0
+    return sum(sp.degree_list(polynomial))
+
+
 def set_to_score_dict(polynomial_set):
     score_dict = {}
     for polynomial in polynomial_set:
@@ -67,14 +73,84 @@ def max_degree_monomial(dict):
     return max_degree
 
     
-def check_Non_quadratic(system: EquationSystem, insert_variable: sp.Poly):
+def check_Non_quadratic(variables, insert_variable: sp.Poly):
     """"
     This function check if the insert_variable is quadratic in the system
     """
-    V = system.variables
-    for el in V:
-        divisor, remindor = sp.div(insert_variable, el)
-        if remindor == 0:
-            if divisor in V:
-                return True
-    return False
+    for variable in variables:
+        divisor, remainder = sp.div(insert_variable, variable)
+        if remainder == 0:
+            if divisor in variables:
+                return False
+    return True
+
+
+def get_all_nonquadratic(variables):
+    """
+    This function returns all the nonquadratic variables in the system
+    """
+    nonquadratic = set()
+    for variable in variables:
+        if variable != 1 and check_Non_quadratic(variables, variable):
+            nonquadratic.add(variable)
+    return nonquadratic
+
+
+def select_decompose_variable(system: EquationSystem):
+    """
+    This function selects the variable with the lowest score function from NS and NQ to decompose. We also need to check which set of the variable comes from
+    """
+    NS = system.NSquare
+    NQ = system.NQuadratic
+    NS_score_dict = set_to_score_dict(NS)
+    NQ_score_dict = set_to_score_dict(NQ)
+    # choose the one with the lowest score function
+    if not NS_score_dict:
+        return min(NQ_score_dict, key=NQ_score_dict.get), 'NQ'
+    elif not NQ_score_dict:
+        return min(NS_score_dict, key=NS_score_dict.get), 'NS'
+    else:
+        if min(NS_score_dict.values()) < min(NQ_score_dict.values()):
+            return min(NS_score_dict, key=NS_score_dict.get), 'NS'
+        else:
+            return min(NQ_score_dict, key=NQ_score_dict.get), 'NQ'
+
+           
+def decompose_variable(system: EquationSystem):
+    system_degree = system.degree
+    selected_variable = select_decompose_variable(system)
+    decomposition = decomposition_monomial(selected_variable[0])
+    valid_decomposition = []
+    
+    if selected_variable[1] == 'NS':
+        # Filter out variables with degree >= system_degree
+        for decompose in decomposition:
+            res = []
+            for i in range(2):
+                if degree_function(decompose[i]) < system_degree and decompose[i] not in system.V:
+                    res.append(decompose[i])
+            if len(res) == 0:
+                continue
+            elif len(res) == 2 and res[0] == res[1]:
+                valid_decomposition.append([res[0]])
+            else:
+                valid_decomposition.append(res)
+                    
+    if selected_variable[1] == 'NQ':
+        # Filter out variables with degree >= system_degree
+        for decompose in decomposition:
+            res = []
+            if 1 in decompose:
+                continue
+            else:
+                for i in range(2):
+                    if degree_function(decompose[i]) < system_degree and decompose[i] not in system.V:
+                        res.append(decompose[i])
+                if len(res) == 0:
+                    continue
+                elif len(res) == 2 and res[0] == res[1]:
+                    valid_decomposition.append([res[0]])
+                else:
+                    valid_decomposition.append(res)
+
+    return selected_variable, valid_decomposition
