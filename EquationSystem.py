@@ -7,6 +7,7 @@ from SymbolsHolder import SymbolsHolder, make_derivative_symbol
 from sympy import init_printing
 from sympy import symbols
 import Combinations as comb
+from IPython.display import Latex
 
 import sympy as sp
 
@@ -79,16 +80,20 @@ class EquationSystem:
                 return False
         return True
 
-    def print_system_latex(self, system):
+    def print_system_latex(self):
         latex_system = []
-
+        system = self.system
         for eq in system:
             lhs = sp.latex(eq.lhs)
             rhs = sp.latex(eq.rhs)
-            latex_eq = f"{lhs}'={rhs}"
+            latex_eq = f"({lhs})' &= {rhs}\\\\" if eq != system[-1] else f"({lhs})' &= {rhs}"
             latex_system.append(latex_eq)
 
         return '\n'.join(latex_system)
+
+    def show_system_latex(self):
+        latex_str = f"\\begin{{cases}}\n{self.print_system_latex()}\n\\end{{cases}}"
+        return Latex(rf"$${latex_str}$$")
 
     def get_dict_variables_equations(self, system):
         dict_variables_equations = {}
