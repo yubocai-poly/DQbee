@@ -36,15 +36,18 @@ def get_decompositions(monomial):
     for r in prev_result:
         for i in range(abs(monomial[-1]) + 1):
             i = i if monomial[-1] >= 0 else -i
-            a, b = tuple(list(r[0]) + [i]), tuple(list(r[1]) + [monomial[-1] - i])
+            a, b = tuple(list(r[0]) + [i]
+                         ), tuple(list(r[1]) + [monomial[-1] - i])
             result.add((min(a, b), max(a, b)))
     return result
+
 
 def monomial_to_tuple(monomial):
     monomial_dict = monomial.as_powers_dict()
     monomial_variables = list(monomial_dict.keys())
     monomial = tuple(monomial_dict.values())
     return monomial_variables, monomial
+
 
 def tuple_to_monomial(monomial_variables, monomial):
     monomial_dict = {}
@@ -53,16 +56,19 @@ def tuple_to_monomial(monomial_variables, monomial):
     monomial = sp.Mul(*[key**value for key, value in monomial_dict.items()])
     return monomial
 
+
 def decomposition_monomial(monomial):
     result = []
     monomial_variables, monomial = monomial_to_tuple(monomial)
     decompositions = get_decompositions(monomial)
     for decomposition in decompositions:
-        decomposition1 = tuple_to_monomial(monomial_variables, decomposition[0])
-        decomposition2 = tuple_to_monomial(monomial_variables, decomposition[1])
+        decomposition1 = tuple_to_monomial(
+            monomial_variables, decomposition[0])
+        decomposition2 = tuple_to_monomial(
+            monomial_variables, decomposition[1])
         result.append((decomposition1, decomposition2))
     return result
-    
+
 
 def max_degree_monomial(dict):
     max_degree = 0
@@ -72,7 +78,7 @@ def max_degree_monomial(dict):
             max_degree = degree_monomial
     return max_degree
 
-    
+
 def check_Non_quadratic(variables, insert_variable: sp.Poly):
     """"
     This function check if the insert_variable is quadratic in the system
@@ -91,7 +97,7 @@ def get_all_nonquadratic(variables):
     """
     nonquadratic = set()
     for variable in variables:
-        if variable != 1 and check_Non_quadratic(variables, variable):
+        if variable != 1 and degree_function(variable) != 1 and check_Non_quadratic(variables, variable):
             nonquadratic.add(variable)
     return nonquadratic
 
@@ -105,7 +111,9 @@ def select_decompose_variable(system: EquationSystem):
     NS_score_dict = set_to_score_dict(NS)
     NQ_score_dict = set_to_score_dict(NQ)
     # choose the one with the lowest score function
-    if not NS_score_dict:
+    if not NS_score_dict and not NQ_score_dict:
+        return None, None
+    elif not NS_score_dict:
         return min(NQ_score_dict, key=NQ_score_dict.get), 'NQ'
     elif not NQ_score_dict:
         return min(NS_score_dict, key=NS_score_dict.get), 'NS'
@@ -115,19 +123,19 @@ def select_decompose_variable(system: EquationSystem):
         else:
             return min(NQ_score_dict, key=NQ_score_dict.get), 'NQ'
 
-           
-def decompose_variable(system: EquationSystem):
+
+def decompose_variable(system: EquationSystem, d):
     system_degree = system.degree
     selected_variable = select_decompose_variable(system)
     decomposition = decomposition_monomial(selected_variable[0])
     valid_decomposition = []
-    
+
     if selected_variable[1] == 'NS':
         # Filter out variables with degree >= system_degree
         for decompose in decomposition:
             res = []
             for i in range(2):
-                if degree_function(decompose[i]) < system_degree and decompose[i] not in system.V:
+                if degree_function(decompose[i]) < d and decompose[i] not in system.V:
                     res.append(decompose[i])
             if len(res) == 0:
                 continue
@@ -135,7 +143,7 @@ def decompose_variable(system: EquationSystem):
                 valid_decomposition.append([res[0]])
             else:
                 valid_decomposition.append(res)
-                    
+
     if selected_variable[1] == 'NQ':
         # Filter out variables with degree >= system_degree
         for decompose in decomposition:
@@ -144,7 +152,7 @@ def decompose_variable(system: EquationSystem):
                 continue
             else:
                 for i in range(2):
-                    if degree_function(decompose[i]) < system_degree and decompose[i] not in system.V:
+                    if degree_function(decompose[i]) < d and decompose[i] not in system.V:
                         res.append(decompose[i])
                 if len(res) == 0:
                     continue

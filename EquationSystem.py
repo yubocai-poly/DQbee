@@ -13,6 +13,7 @@ import sympy as sp
 
 class EquationSystem:
     def __init__(self, system):
+        self._system = system
         self._righthand = []
         self._variables = set()
         self._constants = set()
@@ -24,7 +25,18 @@ class EquationSystem:
 
         for eq in system:
             self._righthand.append(eq.rhs)
-            self._variables.update(eq.lhs.free_symbols)
+            self._variables.add(eq.lhs)
+            # add the variables like x1 ** 3 as well
+            # if comb.degree_function(eq.lhs) > 1:
+            #     new_variables_dict = eq.lhs.as_powers_dict()
+            #     # combine the new_variables_dict together and add the new variables
+            #     list_of_terms = []
+            #     for key in new_variables_dict:
+            #         list_of_terms.append(key ** new_variables_dict[key])
+            #     print(list_of_terms)
+            #     self._variables.add(reduce(lambda x, y: x * y, list_of_terms))
+            # else:
+            #     self._variables.update(eq.lhs.free_symbols)
             self._constants.update(eq.rhs.free_symbols)
 
         self._constants = self._constants - self._variables
@@ -36,10 +48,15 @@ class EquationSystem:
             system)
         self.VSquare = self.get_VSquare(system) | self.variables
         self.NSquare = self.all_terms_RHS - (self.VSquare & self.all_terms_RHS)
-        self.NQuadratic = comb.get_all_nonquadratic(self.V)
+        self.NQuadratic = comb.get_all_nonquadratic(self.variables)
         self.degree = comb.max_degree_monomial(self.all_terms_RHS)
         self.dimension = len(self.variables)
 
+
+    @property
+    def system(self):
+        return self._system
+    
     @property
     def righthand(self):
         return self._righthand
@@ -117,5 +134,7 @@ class EquationSystem:
                 all_terms_RHS.add(reduce(lambda x, y: x * y, list_of_terms))
 
         return all_terms_RHS
+    
+
 
     
