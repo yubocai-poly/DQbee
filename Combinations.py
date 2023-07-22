@@ -14,6 +14,14 @@ def score_function(polynomial):
     return num
 
 
+def find_number_coefficient(term):
+    num_coefficient = 1
+    for key, value in term.as_coefficients_dict().items():
+        num_coefficient = value
+        break
+    return num_coefficient
+
+
 def degree_function(polynomial):
     if polynomial.is_constant():
         return 0
@@ -162,3 +170,15 @@ def decompose_variable(system: EquationSystem, d):
                     valid_decomposition.append(res)
 
     return selected_variable, valid_decomposition
+
+
+def compute_largest_eigenvalue(matrix: sp.Matrix):
+    """
+    This function computes the largest eigenvalue of a matrix
+    """
+    eigenvalues = matrix.eigenvals()
+    eigenvalues = list(eigenvalues.keys())
+    if len(eigenvalues) == 0:
+        return 0
+    else:
+        return max(eigenvalues)

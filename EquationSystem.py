@@ -3,7 +3,6 @@ import sympy as sp
 from functools import reduce
 from typing import List, Iterable
 import AST_walk as ast
-from SymbolsHolder import SymbolsHolder, make_derivative_symbol
 from sympy import init_printing
 from sympy import symbols
 import Combinations as comb
@@ -110,20 +109,14 @@ class EquationSystem:
 
         return VSquare
 
-    def find_constant_coefficient(self, term):
-        constant_terms = set()
-        decomposition = term.expand().as_ordered_factors()
-        for factor in decomposition:
-            if factor in self._constants:
-                constant_terms.add(factor)
-        return constant_terms
-    
-    def find_number_coefficient(self, term):
-        num_coefficient = 1
-        for key, value in term.as_coefficients_dict().items():
-            num_coefficient = value
-            break
-        return num_coefficient
+    # def find_constant_coefficient(self, term):
+    #     constant_terms = set()
+    #     decomposition = term.expand().as_ordered_factors()
+    #     for factor in decomposition:
+    #         if factor in self._constants:
+    #             constant_terms.add(factor)
+    #     return constant_terms
+
 
     def get_all_terms_RHS(self, system):
         all_terms_RHS = set()
