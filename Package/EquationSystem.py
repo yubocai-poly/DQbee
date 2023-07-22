@@ -1,11 +1,10 @@
 import sympy as sp
-
+import sys 
+sys.path.append("..")
 from functools import reduce
 from typing import List, Iterable
-import AST_walk as ast
-from sympy import init_printing
-from sympy import symbols
-import Combinations as comb
+import Package.AST_walk as ast
+import Package.Combinations as comb
 from IPython.display import Latex
 
 import sympy as sp

@@ -1,12 +1,15 @@
 import sympy as sp
 import numpy as np
-from EquationSystem import EquationSystem
+import copy
+import sys 
+sys.path.append("..")
+from Package.EquationSystem import EquationSystem
 from functools import reduce
 from sympy import symbols, diff, expand
 from sympy.core.relational import Equality
 import copy
-from Combinations import *
-from DifferientialPoly import *
+from Package.Combinations import *
+from Package.DifferientialPoly import *
 from IPython.display import Latex
         
 def getOneDQuadratization(system: EquationSystem):
@@ -212,7 +215,8 @@ def make_system_dissipative(original_system: EquationSystem,
     if not (len(DQ_system.NQuadratic) == 0 and len(DQ_system.NSquare) == 0):
         raise ValueError('The system (second input) is not a inner-quadratic, please enter a inner-quadratic system.')
     if original_system.constants != set():
-        print('The system contains symbolic constants. Therefore, we cannot make sure that the original system is dissipative \n\n You may see THIS TYPE OF ERROR: "cannot determine truth value of Relational", this means the program can not tell which one is the largest eigenvalue since there are symbolic constants.')
+        print('The system contains symbolic constants. Therefore, we cannot make sure that the original system is dissipative.')
+        print('You may see THIS TYPE OF ERROR: "cannot determine truth value of Relational", this means the program can not tell which one is the largest eigenvalue since there are symbolic constants.')
         result = dissipative_symbolic(original_system, DQ_system, variables_dict, map_variables)
         print('The converted Optimal Dissipative Quadratization System is: ')
         display(result[3].show_system_latex())

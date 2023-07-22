@@ -1,9 +1,11 @@
 import sympy as sp
-from EquationSystem import EquationSystem
 from sympy import symbols, diff, expand
 from sympy.core.relational import Equality
 import copy
-from Combinations import *
+import sys 
+sys.path.append("..")
+from Package.EquationSystem import EquationSystem
+from Package.Combinations import *
 
 def calculate_polynomial_derivative(polynomial, equations: EquationSystem):
     derivative = 0

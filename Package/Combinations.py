@@ -1,6 +1,7 @@
 import sympy as sp
-from sympy import symbols
-from EquationSystem import EquationSystem
+import sys 
+sys.path.append("..")
+from Package.EquationSystem import EquationSystem
 
 
 def score_function(polynomial):
