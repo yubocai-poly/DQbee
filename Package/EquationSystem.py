@@ -94,9 +94,12 @@ class EquationSystem:
         return Latex(rf"$${latex_str}$$")
 
     def get_dict_variables_equations(self, system):
+        # Gleb: since `system` is stored in `self`, shall we drop it from the argument list?
         dict_variables_equations = {}
         for eq in system:
             dict_variables_equations[eq.lhs] = eq.rhs
+        # Gleb: one can do more concisely
+        # return {eq.lhs : eq.rhs for eq in system}
         return dict_variables_equations
 
     def get_VSquare(self, system):
@@ -119,6 +122,12 @@ class EquationSystem:
 
     def get_all_terms_RHS(self, system):
         all_terms_RHS = set()
+        # Gleb: this code looks a bit indirect to me.
+        # overall, sympy has some nice functionality for working with polynomials
+        # https://docs.sympy.org/latest/modules/polys/basics.html
+        # here I think one could just do 
+        # rhs.as_poly(self.variables).as_dict()
+        # to get all the monomials in rhs as tuples
         for eq in system:
             rhs = eq.rhs
             for term in sp.expand(rhs).as_ordered_terms():
