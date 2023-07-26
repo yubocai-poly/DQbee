@@ -129,7 +129,7 @@ def dissipative_numeric(original_system: EquationSystem,
         for terms in sp.expand(rhs).as_ordered_terms():
             if degree_function(terms) == 1:
                 # add the coefficient to the matrix, with the position of the term
-                coefficient = find_number_coefficient(terms)
+                coefficient = find_numeric_coefficient(terms)
                 F1_original[index, list_term.index(terms / coefficient)] = coefficient
         index += 1
 

@@ -48,7 +48,7 @@ class EquationSystem:
         self.VSquare = self.get_VSquare(system) | self.variables
         self.NSquare = self.all_terms_RHS - (self.VSquare & self.all_terms_RHS)
         self.NQuadratic = comb.get_all_nonquadratic(self.variables)
-        self.degree = comb.max_degree_monomial(self.all_terms_RHS)
+        self.degree = self.max_degree_monomial(self.all_terms_RHS)
         self.dimension = len(self.variables)
 
 
@@ -89,6 +89,17 @@ class EquationSystem:
 
         return '\n'.join(latex_system)
 
+    def max_degree_monomial(self, var_set):
+        """
+        This function compute the degree of the highest degree monomial in the system
+        """
+        max_degree = 0
+        for monomial in var_set:
+            degree_monomial = sum(sp.degree_list(monomial))
+            if degree_monomial > max_degree:
+                max_degree = degree_monomial
+        return max_degree
+
     def show_system_latex(self):
         latex_str = f"\\begin{{cases}}\n{self.print_system_latex()}\n\\end{{cases}}"
         return Latex(rf"$${latex_str}$$")
@@ -121,26 +132,24 @@ class EquationSystem:
 
 
     def get_all_terms_RHS(self, system):
+        """
+        get all the terms in the RHS of the system
+        Yubo: corrected with the suggestion
+        """
         all_terms_RHS = set()
-        # Gleb: this code looks a bit indirect to me.
-        # overall, sympy has some nice functionality for working with polynomials
-        # https://docs.sympy.org/latest/modules/polys/basics.html
-        # here I think one could just do 
-        # rhs.as_poly(self.variables).as_dict()
-        # to get all the monomials in rhs as tuples
+        variables = list(self.variables)
         for eq in system:
             rhs = eq.rhs
-            for term in sp.expand(rhs).as_ordered_terms():
-                # Here we use combinations to find all the terms in RHS, we first
-                term_dict = term.as_powers_dict()
-                list_of_terms = []
-                for key in term_dict:
-                    if key in self.variables:
-                        list_of_terms.append(key**term_dict[key])
-                all_terms_RHS.add(reduce(lambda x, y: x * y, list_of_terms))
-
+            terms_dict = rhs.as_poly(variables).as_dict()
+            for term, coef in terms_dict.items():
+                # combine the term together
+                new_term = reduce(lambda x, y: x * y, [var**exp for var, exp in zip(variables, term)])
+        
+                all_terms_RHS.add(new_term)
+        
         return all_terms_RHS
     
 
-
+def update_system(system: EquationSystem, new_variable):
+    pass
     

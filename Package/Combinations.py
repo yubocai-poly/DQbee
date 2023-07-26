@@ -1,12 +1,14 @@
-import sympy as sp
-import sys 
-sys.path.append("..")
 from Package.EquationSystem import EquationSystem
+import sympy as sp
+import sys
+sys.path.append("..")
 
 
 def score_function(polynomial):
     """
-    Here the polynomial of input need to be polynomial without the coefficient
+    Role: Compute the score function of a polynomial
+    Input: polynomial without coefficient
+    Output: score function of the polynomial
     """
     powers = polynomial.as_powers_dict()
     num = 1
@@ -15,7 +17,13 @@ def score_function(polynomial):
     return num
 
 
-def find_number_coefficient(term):
+def find_numeric_coefficient(term):
+    """
+    Role: Compute the coefficient of a term(polynomial), this function only can computer the 
+    numerical coefficient, not symbolic coefficient
+    Input: 2x^2y^3z^4
+    Output: 2
+    """
     num_coefficient = 1
     for key, value in term.as_coefficients_dict().items():
         num_coefficient = value
@@ -24,12 +32,20 @@ def find_number_coefficient(term):
 
 
 def degree_function(polynomial):
+    """
+    Role: Compute the degree of a polynomial
+    """
     if polynomial.is_constant():
         return 0
     return sum(sp.degree_list(polynomial))
 
 
 def set_to_score_dict(polynomial_set):
+    """
+    Role: Compute the score function of a polynomial set
+    Input: a set of polynomials
+    Output: a dictionary with key is polynomial and value is score function of the polynomial
+    """
     score_dict = {}
     for polynomial in polynomial_set:
         score = score_function(polynomial)
@@ -38,6 +54,11 @@ def set_to_score_dict(polynomial_set):
 
 
 def get_decompositions(monomial):
+    """
+    Role: Compute all the decompositions of a monomial
+    Input: a tuple (2, 1, 2) represent the degree of a monomial x^2y^1z^2
+    Output: a set of decompositions of the monomial, in tuple form
+    """
     if len(monomial) == 0:
         return {(tuple(), tuple())}
     result = set()
@@ -52,6 +73,11 @@ def get_decompositions(monomial):
 
 
 def monomial_to_tuple(monomial):
+    """
+    Transform a monomial to tuple form
+    Input: a monomial
+    Output: [variables of the monomial], all the decompositions of the monomial (in tuple form)
+    """
     monomial_dict = monomial.as_powers_dict()
     monomial_variables = list(monomial_dict.keys())
     monomial = tuple(monomial_dict.values())
@@ -59,6 +85,9 @@ def monomial_to_tuple(monomial):
 
 
 def tuple_to_monomial(monomial_variables, monomial):
+    """
+    Transform a tuple to monomial form
+    """
     monomial_dict = {}
     for i in range(len(monomial_variables)):
         monomial_dict[monomial_variables[i]] = monomial[i]
@@ -79,16 +108,7 @@ def decomposition_monomial(monomial):
     return result
 
 
-def max_degree_monomial(dict):
-    max_degree = 0
-    for monomial in dict:
-        degree_monomial = sum(sp.degree_list(monomial))
-        if degree_monomial > max_degree:
-            max_degree = degree_monomial
-    return max_degree
-
-
-def check_Non_quadratic(variables, insert_variable: sp.Poly):
+def check_non_quadratic(variables, insert_variable: sp.Poly):
     """"
     This function check if the insert_variable is quadratic in the system
     """
@@ -106,7 +126,7 @@ def get_all_nonquadratic(variables):
     """
     nonquadratic = set()
     for variable in variables:
-        if variable != 1 and degree_function(variable) != 1 and check_Non_quadratic(variables, variable):
+        if variable != 1 and degree_function(variable) != 1 and check_non_quadratic(variables, variable):
             nonquadratic.add(variable)
     return nonquadratic
 
@@ -134,11 +154,16 @@ def select_decompose_variable(system: EquationSystem):
 
 
 def decompose_variable(system: EquationSystem, d):
+    """
+    Role: Find all the valid decompositions of the selected variable
+    """
     system_degree = system.degree
     selected_variable = select_decompose_variable(system)
     decomposition = decomposition_monomial(selected_variable[0])
     valid_decomposition = []
-
+    """
+    yubo: Here I didn't simply the code since if I merge them together, for every decomposition, I need to check if the decomposition is valid or not, which will increase the time complexity
+    """
     if selected_variable[1] == 'NS':
         # Filter out variables with degree >= system_degree
         for decompose in decomposition:
@@ -171,6 +196,7 @@ def decompose_variable(system: EquationSystem, d):
                     valid_decomposition.append(res)
 
     return selected_variable, valid_decomposition
+    
 
 
 def compute_largest_eigenvalue(matrix: sp.Matrix):
