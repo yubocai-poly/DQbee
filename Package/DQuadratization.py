@@ -43,15 +43,15 @@ def OptimalInnerQuadratization(system: EquationSystem):
         - system
     Output: 
         - OIQ_system: the optimal inner quadratization of the system
-        - new_variables_dict: the dictionary of the new introduced variables, e.g. {x1 ** 2: w1}
         - sub_OIQ_system: the optimal system after substituting the new introduced variables
-        - new_variables_dict_inverse: the inverse of the new_variables_dict, e.g. {w1: x1 ** 2}
+        - new_variables_dict_aux: the sub dictionary from new_variables_dict which only contain the quadratic expression of new introduced variables, this output is used for Optimal DQ function
+        - map_variables: the dictionary of the mapping between the new introduced variables and the original variables, e.g. {w1: x1 ** 2}
     """
     d = system.degree
     optimal_result = [None]
     InnerQuadratization(system, d, optimal_result)
     new_variables_dict = {}
-    new_variables_dict_inverse = {}
+    new_variables_dict_aux = {}
     map_variables = {}
     original_variables_dict = {}
     substitute_system = []
@@ -89,7 +89,7 @@ def OptimalInnerQuadratization(system: EquationSystem):
             if variable1 in Introduced_variables or variable2 in Introduced_variables:
                 new_variables_dict[variable1 * variable2] = new_variables_dict_copy[variable1] * \
                     new_variables_dict_copy[variable2]
-                new_variables_dict_inverse[
+                new_variables_dict_aux[
                     variable1 * variable2] = new_variables_dict_copy[variable1] * new_variables_dict_copy[variable2]
     # uncomment the following line if not make the whole rhs quadratic
     # new_variables_dict.update(new_variables_dict_copy)
@@ -120,7 +120,7 @@ def OptimalInnerQuadratization(system: EquationSystem):
     print('The Optimal Quadratic Dissipative System is (with substitution): ')
     display(sub_OIQ_system.show_system_latex())
 
-    return OIQ_system, new_variables_dict, sub_OIQ_system, new_variables_dict_inverse, map_variables
+    return OIQ_system, sub_OIQ_system, new_variables_dict_aux, map_variables
 
 # ------------------ Dissipative Quadratization ------------------
 
