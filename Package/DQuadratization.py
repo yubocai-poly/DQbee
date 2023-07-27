@@ -39,8 +39,13 @@ def InnerQuadratization(system: EquationSystem, d, optimal_result):
 def OptimalInnerQuadratization(system: EquationSystem):
     """
     Role: find the optimal inner quadratization of a system
-    Input: system
-    Output: the optimal inner quadratization of the system
+    Input: 
+        - system
+    Output: 
+        - OIQ_system: the optimal inner quadratization of the system
+        - new_variables_dict: the dictionary of the new introduced variables, e.g. {x1 ** 2: w1}
+        - sub_OIQ_system: the optimal system after substituting the new introduced variables
+        - new_variables_dict_inverse: the inverse of the new_variables_dict, e.g. {w1: x1 ** 2}
     """
     d = system.degree
     optimal_result = [None]
@@ -121,21 +126,34 @@ def OptimalInnerQuadratization(system: EquationSystem):
 
 
 def OptimalDissipativeQuadratization(original_system: EquationSystem,
-                                     DQ_system: EquationSystem,
+                                     IQ_system: EquationSystem,
                                      variables_dict: dict,
                                      map_variables: dict,
                                      Input_diagonal=None):
-    if not (len(DQ_system.NQuadratic) == 0 and len(DQ_system.NSquare) == 0):
+    """
+    Role: Compute the Optimal Dissipative Quadratization of a system
+    Input:
+        - original_system: the original system
+        - IQ—system: the optimal inner-quadratic system from the original system, need to be the one with substitution
+        - variables_dict: the dictionary of the new introduced variables, e.g. {x1 ** 2: w1}
+        - map_variables: the dictionary of the mapping between the new introduced variables and the original variables, e.g. {w1: x1 ** 2}
+        - Input_diagonal: the list of values of the diagonal of F1 that we want to input, if None, we just use the largest eigenvalue of F1_original as default
+    Output:
+        - the optimal dissipative quadratization of the system
+        - Latex print of the system
+        - Latex print of F1
+    """
+    if not (len(IQ_system.NQuadratic) == 0 and len(IQ_system.NSquare) == 0):
         raise ValueError(
             'The system (second input) is not a inner-quadratic, please enter a inner-quadratic system.')
     n_original = original_system.dimension
-    n = DQ_system.dimension
+    n = IQ_system.dimension
     F1_original = sp.zeros(n_original)
     F1 = sp.zeros(n)
     list_term = []
     type_system = None
     original_variables = list(original_system.variables)
-    for equation in DQ_system.system:
+    for equation in IQ_system.system:
         list_term.append(equation.lhs)
     index = 0
 
@@ -174,16 +192,16 @@ def OptimalDissipativeQuadratization(original_system: EquationSystem,
     for i in range(n_original, n):
         F1[i, i] = Input_diagonal[i - n_original]
 
-    new_system = DQ_system.system[0:n_original]
+    new_system = IQ_system.system[0:n_original]
     for i in range(n_original, n):
-        equation = DQ_system.system[i]
+        equation = IQ_system.system[i]
         lhs = equation.lhs
         if map_variables[lhs] not in variables_dict:
-            rhs = largest_eigenvalue * lhs + equation.rhs - \
-                largest_eigenvalue * map_variables[lhs]
+            rhs = Input_diagonal[i - n_original] * lhs + equation.rhs - \
+                Input_diagonal[i - n_original] * map_variables[lhs]
         else:
-            rhs = largest_eigenvalue * lhs + equation.rhs - \
-                largest_eigenvalue * variables_dict[map_variables[lhs]]
+            rhs = Input_diagonal[i - n_original] * lhs + equation.rhs - \
+                Input_diagonal[i - n_original] * variables_dict[map_variables[lhs]]
         new_system.append(Equality(lhs, rhs))
 
     dissipative_system = EquationSystem(new_system)
