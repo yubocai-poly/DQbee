@@ -1,7 +1,5 @@
-from Package.EquationSystem import EquationSystem
 import sympy as sp
-import sys
-sys.path.append("..")
+import cmath
 
 
 def score_function(polynomial):
@@ -15,20 +13,6 @@ def score_function(polynomial):
     for var, exp in powers.items():
         num *= (exp + 1)
     return num
-
-
-def find_numeric_coefficient(term):
-    """
-    Role: Compute the coefficient of a term(polynomial), this function only can computer the 
-    numerical coefficient, not symbolic coefficient
-    Input: 2x^2y^3z^4
-    Output: 2
-    """
-    num_coefficient = 1
-    for key, value in term.as_coefficients_dict().items():
-        num_coefficient = value
-        break
-    return num_coefficient
 
 
 def degree_function(polynomial):
@@ -131,75 +115,7 @@ def get_all_nonquadratic(variables):
     return nonquadratic
 
 
-def select_decompose_variable(system: EquationSystem):
-    """
-    This function selects the variable with the lowest score function from NS and NQ to decompose. We also need to check which set of the variable comes from
-    """
-    NS = system.NSquare
-    NQ = system.NQuadratic
-    NS_score_dict = set_to_score_dict(NS)
-    NQ_score_dict = set_to_score_dict(NQ)
-    # choose the one with the lowest score function
-    if not NS_score_dict and not NQ_score_dict:
-        return None, None
-    elif not NS_score_dict:
-        return min(NQ_score_dict, key=NQ_score_dict.get), 'NQ'
-    elif not NQ_score_dict:
-        return min(NS_score_dict, key=NS_score_dict.get), 'NS'
-    else:
-        if min(NS_score_dict.values()) < min(NQ_score_dict.values()):
-            return min(NS_score_dict, key=NS_score_dict.get), 'NS'
-        else:
-            return min(NQ_score_dict, key=NQ_score_dict.get), 'NQ'
-
-
-def decompose_variable(system: EquationSystem, d):
-    """
-    Role: Find all the valid decompositions of the selected variable
-    """
-    system_degree = system.degree
-    selected_variable = select_decompose_variable(system)
-    decomposition = decomposition_monomial(selected_variable[0])
-    valid_decomposition = []
-    """
-    yubo: Here I didn't simply the code since if I merge them together, for every decomposition, I need to check if the decomposition is valid or not, which will increase the time complexity
-    """
-    if selected_variable[1] == 'NS':
-        # Filter out variables with degree >= system_degree
-        for decompose in decomposition:
-            res = []
-            for i in range(2):
-                if degree_function(decompose[i]) < d and decompose[i] not in system.V:
-                    res.append(decompose[i])
-            if len(res) == 0:
-                continue
-            elif len(res) == 2 and res[0] == res[1]:
-                valid_decomposition.append([res[0]])
-            else:
-                valid_decomposition.append(res)
-
-    if selected_variable[1] == 'NQ':
-        # Filter out variables with degree >= system_degree
-        for decompose in decomposition:
-            res = []
-            if 1 in decompose:
-                continue
-            else:
-                for i in range(2):
-                    if degree_function(decompose[i]) < d and decompose[i] not in system.V:
-                        res.append(decompose[i])
-                if len(res) == 0:
-                    continue
-                elif len(res) == 2 and res[0] == res[1]:
-                    valid_decomposition.append([res[0]])
-                else:
-                    valid_decomposition.append(res)
-
-    return selected_variable, valid_decomposition
-    
-
-
-def compute_largest_eigenvalue(matrix: sp.Matrix):
+def compute_largest_eigenvalue(matrix: sp.Matrix, type_system):
     """
     This function computes the largest eigenvalue of a matrix
     """
@@ -207,5 +123,17 @@ def compute_largest_eigenvalue(matrix: sp.Matrix):
     eigenvalues = list(eigenvalues.keys())
     if len(eigenvalues) == 0:
         return 0
+    if type_system == 'symbolic':
+        try:
+            return max([eigenvalue.real for eigenvalue in eigenvalues])
+        except:
+            return eigenvalues[0]
     else:
-        return max(eigenvalues)
+        # get the eigenvalue with the largest real part
+        max_real_eigen = max([complex(eigenvalue).real for eigenvalue in eigenvalues])
+        if max_real_eigen >= 0:
+            print(eigenvalues)
+            raise ValueError(
+                'The largest eigenvalue is not negative, the original system is not dissipative')
+        else:
+            return max_real_eigen
