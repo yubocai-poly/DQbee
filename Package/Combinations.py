@@ -61,6 +61,7 @@ def monomial_to_tuple(monomial):
     Transform a monomial to tuple form
     Input: a monomial
     Output: [variables of the monomial], all the decompositions of the monomial (in tuple form)
+    Gleb: I do not see any decompositions computed in this function...
     """
     monomial_dict = monomial.as_powers_dict()
     monomial_variables = list(monomial_dict.keys())
@@ -91,7 +92,8 @@ def decomposition_monomial(monomial):
         result.append((decomposition1, decomposition2))
     return result
 
-
+# Gleb I would say that checking a negrated property is a bit counter-intuitive,
+# I propose rather `check_quadratic`
 def check_non_quadratic(variables, insert_variable: sp.Poly):
     """"
     This function check if the insert_variable is quadratic in the system
@@ -114,7 +116,7 @@ def get_all_nonquadratic(variables):
             nonquadratic.add(variable)
     return nonquadratic
 
-
+# Gleb: I wonder why is this in the `Combinations` file?
 def compute_largest_eigenvalue(matrix: sp.Matrix, type_system):
     """
     This function computes the largest eigenvalue of a matrix

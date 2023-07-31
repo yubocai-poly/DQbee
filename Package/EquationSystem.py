@@ -81,6 +81,7 @@ class EquationSystem:
         """
         max_degree = 0
         for monomial in var_set:
+            # Gleb: you have a similar function in the Combinations file
             degree_monomial = sum(sp.degree_list(monomial))
             if degree_monomial > max_degree:
                 max_degree = degree_monomial
@@ -112,6 +113,7 @@ class EquationSystem:
         for eq in system:
             rhs = eq.rhs
             terms_dict = rhs.as_poly(variables).as_dict()
+            # Gleb: what is this for?
             for term, coef in terms_dict.items():
                 # combine the term together
                 new_term = reduce(lambda x, y: x * y, [var**exp for var, exp in zip(variables, term)])

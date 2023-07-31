@@ -14,7 +14,7 @@ sys.path.append("..")
 
 def InnerQuadratization(system: EquationSystem, d, optimal_result):
     """
-    Role: This function find the optimal innter quadratization of a system
+    Role: This function finds the optimal innter quadratization of a system
     Input: system, dimension of the original system, optimal_result which is a list
     Output: None, but the optimal_result will be updated
     """
@@ -82,8 +82,10 @@ def OptimalInnerQuadratization(system: EquationSystem):
     for variable in system.variables:
         original_variables_dict[variable] = variable
     new_variables_dict.update(original_variables_dict)
+    # Gleb: why is this copy needed?
     new_variables_dict_copy = copy.deepcopy(new_variables_dict)
 
+    # Gleb: Shouldn't you rather iterate over Introduced_variables then? Or the intersection of OIQ_variables and Introduced_variables ?
     for variable1 in OIQ_variables:
         for variable2 in OIQ_variables:
             if variable1 in Introduced_variables or variable2 in Introduced_variables:
@@ -95,6 +97,7 @@ def OptimalInnerQuadratization(system: EquationSystem):
     # new_variables_dict.update(new_variables_dict_copy)
 
     variables = list(OIQ_system.variables)
+    # Gleb: this could be separated into a function
     for equation in OIQ_system.system:
         lhs = equation.lhs
         rhs = equation.rhs.expand()
