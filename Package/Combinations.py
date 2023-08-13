@@ -2,38 +2,38 @@ import sympy as sp
 import cmath
 
 
-def score_function(polynomial):
+def score_function(monomial):
     """
-    Role: Compute the score function of a polynomial
-    Input: polynomial without coefficient
-    Output: score function of the polynomial
+    Role: Compute the score function of a monomial
+    Input: monomial without coefficient
+    Output: score function of the monomial
     """
-    powers = polynomial.as_powers_dict()
+    powers = monomial.as_powers_dict()
     num = 1
     for var, exp in powers.items():
         num *= (exp + 1)
     return num
 
 
-def degree_function(polynomial):
+def degree_function(monomial):
     """
-    Role: Compute the degree of a polynomial
+    Role: Compute the degree of a monomial
     """
-    if polynomial.is_constant():
+    if monomial.is_constant():
         return 0
-    return sum(sp.degree_list(polynomial))
+    return sum(sp.degree_list(monomial))
 
 
-def set_to_score_dict(polynomial_set):
+def set_to_score_dict(monomial_set):
     """
-    Role: Compute the score function of a polynomial set
-    Input: a set of polynomials
-    Output: a dictionary with key is polynomial and value is score function of the polynomial
+    Role: Compute the score function of a monomial set
+    Input: a set of monomials
+    Output: a dictionary with key is monomial and value is score function of the monomial
     """
     score_dict = {}
-    for polynomial in polynomial_set:
-        score = score_function(polynomial)
-        score_dict[polynomial] = score
+    for monomial in monomial_set:
+        score = score_function(monomial)
+        score_dict[monomial] = score
     return score_dict
 
 
@@ -73,11 +73,7 @@ def tuple_to_monomial(monomial_variables, monomial):
     """
     Transform a tuple to monomial form
     """
-    monomial_dict = {}
-    for i in range(len(monomial_variables)):
-        monomial_dict[monomial_variables[i]] = monomial[i]
-    monomial = sp.Mul(*[key**value for key, value in monomial_dict.items()])
-    return monomial
+    return sp.Mul(*[monomial_variables[i]**monomial[i] for i in range(len(monomial_variables))])
 
 
 def decomposition_monomial(monomial):

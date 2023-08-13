@@ -296,9 +296,10 @@ class EquationSystem:
 
     def update_system(self, subproblem):
         subproblem = list(subproblem)
+        system = copy.deepcopy(self)
         if len(subproblem) == 1:
             return self.update_system_aux(subproblem[0])
         else:
             for i in range(len(subproblem)):
-                system = self.update_system_aux(subproblem[i])
+                system = system.update_system_aux(subproblem[i])
             return system

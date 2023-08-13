@@ -14,6 +14,7 @@ sys.path.append("..")
 # function name = lower case
 # variable name = lower case
 
+
 def compute_largest_eigenvalue(matrix: sp.Matrix, type_system):
     """
     This function computes the largest eigenvalue of a matrix
@@ -29,7 +30,8 @@ def compute_largest_eigenvalue(matrix: sp.Matrix, type_system):
             return eigenvalues[0]
     else:
         # get the eigenvalue with the largest real part
-        max_real_eigen = max([complex(eigenvalue).real for eigenvalue in eigenvalues])
+        max_real_eigen = max(
+            [complex(eigenvalue).real for eigenvalue in eigenvalues])
         if max_real_eigen >= 0:
             print(eigenvalues)
             raise ValueError(
@@ -49,8 +51,6 @@ def inner_quadratization(system: EquationSystem, d, optimal_result):
             optimal_result[0] = system.variables
         elif len(system.variables) < len(optimal_result[0]):
             optimal_result[0] = system.variables
-        # else:
-        #     print(str(system.variables))
         return
 
     subproblem_set = system.decompose_variable(d)
@@ -59,9 +59,35 @@ def inner_quadratization(system: EquationSystem, d, optimal_result):
         if (optimal_result[0] is not None) and (len(subproblem) + len(system.variables) >= len(optimal_result[0]) or len(system.variables) + max(system.pruning_rule_ODQ_num, system.pruning_rule_OQ_num) >= len(optimal_result[0])):
             continue
         subproblem_list.append(system.update_system(subproblem))
-        # subproblem_list.append(calculate_new_subproblem(system, subproblem))
     for subproblem in subproblem_list:
         inner_quadratization(subproblem, d, optimal_result)
+
+# def inner_quadratization(system: EquationSystem, d):
+#     """
+#     Role: This function finds the optimal innter quadratization of a system
+#     Input: system, dimension of the original system
+#     Output: the optimal inner quadratization of the system
+#     """
+#     optimal_result = [None]
+
+#     if len(system.NSquare) == 0 and len(system.NQuadratic) == 0:
+#         optimal_result[0] = system.variables
+#         return optimal_result
+
+#     subproblem_set = system.decompose_variable(d)
+#     subproblem_list = []
+#     for subproblem in subproblem_set:
+#         if (optimal_result[0] is not None) and (len(subproblem) + len(system.variables) >= len(optimal_result[0]) or len(system.variables) + max(system.pruning_rule_ODQ_num, system.pruning_rule_OQ_num) >= len(optimal_result[0])):
+#             continue
+#         subproblem_list.append(system.update_system(subproblem))
+#         # subproblem_list.append(calculate_new_subproblem(system, subproblem))
+#     for subproblem in subproblem_list:
+#         new_optimal_result = inner_quadratization(subproblem, d)
+#         if optimal_result[0] is None or len(new_optimal_result[0]) < len(optimal_result[0]):
+#             optimal_result = new_optimal_result
+
+#     return optimal_result
+
 
 
 def optimal_inner_quadratization(system: EquationSystem):
@@ -78,6 +104,7 @@ def optimal_inner_quadratization(system: EquationSystem):
     d = system.degree
     optimal_result = [None]
     inner_quadratization(system, d, optimal_result)
+    # optimal_result = inner_quadratization(system, d)
     new_variables_dict = {}
     new_variables_dict_aux = {}
     map_variables = {}
@@ -119,7 +146,7 @@ def optimal_inner_quadratization(system: EquationSystem):
             if variable1 in introduced_variables or variable2 in introduced_variables:
                 # variable1 == x1 varaible2 == x2
                 # variable == w1 variable2 == x2 w1 == x1 ** 2
-                # w1 * x1 = 
+                # w1 * x1 =
                 # quadratized dict
                 new_variables_dict[variable1 * variable2] = new_variables_dict_copy[variable1] * \
                     new_variables_dict_copy[variable2]
@@ -162,10 +189,10 @@ def optimal_inner_quadratization(system: EquationSystem):
 
 
 def optimal_dissipative_quadratization(original_system: EquationSystem,
-                                     IQ_system: EquationSystem,
-                                     variables_dict: dict,
-                                     map_variables: dict,
-                                     Input_diagonal=None):
+                                       IQ_system: EquationSystem,
+                                       variables_dict: dict,
+                                       map_variables: dict,
+                                       Input_diagonal=None):
     """
     Role: Compute the Optimal Dissipative Quadratization of a system
     Input:
@@ -212,7 +239,8 @@ def optimal_dissipative_quadratization(original_system: EquationSystem,
         type_system = 'numeric'
 
     largest_eigenvalue = compute_largest_eigenvalue(F1_original, type_system)
-    print('The eigenvalue with the largest real part is (real part): ', largest_eigenvalue)
+    print('The eigenvalue with the largest real part is (real part): ',
+          largest_eigenvalue)
 
     if Input_diagonal == None:
         Input_diagonal = [largest_eigenvalue] * n
@@ -237,7 +265,8 @@ def optimal_dissipative_quadratization(original_system: EquationSystem,
                 Input_diagonal[i - n_original] * map_variables[lhs]
         else:
             rhs = Input_diagonal[i - n_original] * lhs + equation.rhs - \
-                Input_diagonal[i - n_original] * variables_dict[map_variables[lhs]]
+                Input_diagonal[i - n_original] * \
+                variables_dict[map_variables[lhs]]
         new_system.append(Equality(lhs, rhs))
 
     dissipative_system = EquationSystem(new_system)
@@ -255,7 +284,7 @@ def ComputeWeaklyNonlinearity(system: EquationSystem):
     """
     print("-------------------------- Compute Weakly Nonlinearity bound for |x| --------------------------")
     print("-------------------------- Warning: Please enter a quadratic ODE system --------------------------")
-    n = system.dimension 
+    n = system.dimension
     F1 = sp.zeros(n, n)
     F2 = sp.zeros(n, (n ** 2))
     list_term = []
@@ -268,10 +297,12 @@ def ComputeWeaklyNonlinearity(system: EquationSystem):
         term_dict = rhs.as_poly(list_term).as_dict()
         for term, coef in term_dict.items():
             if sum(term) == 1:
-                nonzero_indices = [index for index, value in enumerate(term) if value != 0]
+                nonzero_indices = [index for index,
+                                   value in enumerate(term) if value != 0]
                 F1[index, nonzero_indices[0]] = coef
             if sum(term) == 2:
-                nonzero_indices = [index for index, value in enumerate(term) if value != 0]
+                nonzero_indices = [index for index,
+                                   value in enumerate(term) if value != 0]
                 if len(nonzero_indices) == 1:
                     F2[index, nonzero_indices[0] * n + nonzero_indices[0]] = coef
                 else:
@@ -281,13 +312,16 @@ def ComputeWeaklyNonlinearity(system: EquationSystem):
     display(Latex(rf"$$F_{1}={sp.latex(F1)}$$"))
     display(Latex(rf"$$F_{2}={sp.latex(F2)}$$"))
 
-    largest_eigen_F1 = np.abs(max([complex(eigenvalue).real for eigenvalue in F1.eigenvals().keys()]))
+    largest_eigen_F1 = np.abs(
+        max([complex(eigenvalue).real for eigenvalue in F1.eigenvals().keys()]))
     operator_norm_F2 = np.abs(F2.norm(2))
     expression = r"The system is said to be weakly nonlinear if the ratio $$R:=\frac{\left\|X_0\right\|\left\|F_2\right\|}{\left|\Re\left(\lambda_1\right)\right|} < 1 \Rightarrow 0 < \|X_0\| < \frac{\left|\Re\left(\lambda_1\right)\right|}{\left\|F_2\right\|}$$"
     display(Latex(expression))
     if largest_eigen_F1 == 0:
-        display(Latex(rf"The bound for $\|X\|$ is invalid since $\left|\Re\left(\lambda_1\right)\right|=0$"))
+        display(Latex(
+            rf"The bound for $\|X\|$ is invalid since $\left|\Re\left(\lambda_1\right)\right|=0$"))
     else:
         upper_bound = operator_norm_F2 / largest_eigen_F1
-        display(Latex(rf"The upper bound for $\|X\|$ is: $$0 < \|X\| < {upper_bound}$$ where $\left|\Re\left(\lambda_1\right)\right|={largest_eigen_F1}$ and $\left\|F_2\right\|={operator_norm_F2}$"))
+        display(Latex(
+            rf"The upper bound for $\|X\|$ is: $$0 < \|X\| < {upper_bound}$$ where $\left|\Re\left(\lambda_1\right)\right|={largest_eigen_F1}$ and $\left\|F_2\right\|={operator_norm_F2}$"))
     return F2
