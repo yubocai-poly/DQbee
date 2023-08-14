@@ -2,17 +2,14 @@ import copy
 import numpy as np
 import sympy as sp
 from Package.EquationSystem import *
+from Package.Combinations import *
 from functools import reduce
 from sympy import symbols, diff, expand
 from sympy.core.relational import Equality
-from Package.Combinations import *
 from IPython.display import Latex
 import sys
 sys.path.append("..")
 # from Package.DifferientialPoly import *
-
-# function name = lower case
-# variable name = lower case
 
 
 def compute_largest_eigenvalue(matrix: sp.Matrix, type_system):
@@ -89,7 +86,6 @@ def inner_quadratization(system: EquationSystem, d, optimal_result):
 #     return optimal_result
 
 
-
 def optimal_inner_quadratization(system: EquationSystem):
     """
     Role: find the optimal inner quadratization of a system
@@ -98,22 +94,19 @@ def optimal_inner_quadratization(system: EquationSystem):
     Output: 
         - OIQ_system: the optimal inner quadratization of the system
         - sub_OIQ_system: the optimal system after substituting the new introduced variables
-        - new_variables_dict_aux: the sub dictionary from new_variables_dict which only contain the quadratic expression of new introduced variables, this output is used for Optimal DQ function
+        - monomial_to_quadratic_form: the sub dictionary from monomial_2_quadra which only contain the quadratic expression of new introduced variables, this output is used for Optimal DQ function
         - map_variables: the dictionary of the mapping between the new introduced variables and the original variables, e.g. {w1: x1 ** 2}
     """
     d = system.degree
     optimal_result = [None]
     inner_quadratization(system, d, optimal_result)
     # optimal_result = inner_quadratization(system, d)
-    new_variables_dict = {}
-    new_variables_dict_aux = {}
+    monomial_2_quadra = {}
+    monomial_to_quadratic_form = {}
     map_variables = {}
-    original_variables_dict = {}
     substitute_system = []
-    new_variables_latex = ''
     OIQ_variables = optimal_result[0]
     introduced_variables = OIQ_variables - system.variables
-    # OIQ_system = calculate_new_subproblem(system, introduced_variables)
     OIQ_system = system.update_system(introduced_variables)
     print('The Original System is: ')
     display(system.show_system_latex())
@@ -121,61 +114,57 @@ def optimal_inner_quadratization(system: EquationSystem):
     display(OIQ_system.show_system_latex())
 
     # for each new introduced variable, we create a new symbol corresponding to it, like w_1, w_2, ...
-    for variable in introduced_variables:
-        new_variables_dict[variable] = symbols(
-            'w' + str(len(new_variables_dict) + 1))
-        map_variables[symbols('w' + str(len(new_variables_dict)))] = variable
+    num = 0
+    for variable in OIQ_variables:
+        if variable in system.variables:
+            monomial_2_quadra[variable] = variable
+            num += 1
+        else:
+            monomial_2_quadra[variable] = symbols(
+                'w' + str(len(monomial_2_quadra) + 1 - num))
+            map_variables[monomial_2_quadra[variable]] = variable
+
 
     # print the new introduced variables in latex
     print('The new introduced variables are: ')
+    new_variables_latex = ''
     for variable in introduced_variables:
         new_variables_latex = new_variables_latex + \
-            f"{sp.latex(new_variables_dict[variable])} = {sp.latex(variable)} \\\\ "
+            f"{sp.latex(monomial_2_quadra[variable])} = {sp.latex(variable)} \\\\ "
     latex_ = f"\\begin{{cases}}\n{new_variables_latex}\n\\end{{cases}}"
     display(Latex(rf"$${latex_}$$"))
 
-    for variable in system.variables:
-        original_variables_dict[variable] = variable
-    new_variables_dict.update(original_variables_dict)
-    # Gleb: why is this copy needed?
-    new_variables_dict_copy = copy.deepcopy(new_variables_dict)
-
-    # Gleb: Shouldn't you rather iterate over introduced_variables then? Or the intersection of OIQ_variables and introduced_variables ?
+    # Here monomial_to_quadratic_form which is the map from monomial to it's quadratic form only
+    # monomial_2_quadra also contains the variable to itself
+    monomial_2_quadra_copy = copy.deepcopy(monomial_2_quadra)
     for variable1 in OIQ_variables:
         for variable2 in OIQ_variables:
             if variable1 in introduced_variables or variable2 in introduced_variables:
-                # variable1 == x1 varaible2 == x2
-                # variable == w1 variable2 == x2 w1 == x1 ** 2
-                # w1 * x1 =
-                # quadratized dict
-                new_variables_dict[variable1 * variable2] = new_variables_dict_copy[variable1] * \
-                    new_variables_dict_copy[variable2]
-                new_variables_dict_aux[
-                    variable1 * variable2] = new_variables_dict_copy[variable1] * new_variables_dict_copy[variable2]
+                monomial_2_quadra[variable1 * variable2] = monomial_2_quadra_copy[variable1] * \
+                    monomial_2_quadra_copy[variable2]
+                monomial_to_quadratic_form[
+                    variable1 * variable2] = monomial_2_quadra_copy[variable1] * monomial_2_quadra_copy[variable2]
     # uncomment the following line if not make the whole rhs quadratic
-    # new_variables_dict.update(new_variables_dict_copy)
-    # change the name inner quadratized dict
+    # monomial_2_quadra.update(monomial_2_quadra)
 
     variables = list(OIQ_system.variables)
-    # Gleb: this could be separated into a function
     for equation in OIQ_system.system:
         lhs = equation.lhs
         rhs = equation.rhs.expand()
         new_lhs = None
         new_rhs = None
         # substitute the left hand side to make the degree is 1
-        if lhs in new_variables_dict_copy:
-            new_lhs = new_variables_dict_copy[lhs]
+        if lhs in monomial_2_quadra_copy:
+            new_lhs = monomial_2_quadra_copy[lhs]
         # now we substitute the right handside to make sure it quadratic
         for term in sp.expand(rhs).as_ordered_terms():
             term_dict = term.as_poly(variables).as_dict()
             for key, value in term_dict.items():
-                coef = value
                 cleaned_term = reduce(
                     lambda x, y: x*y, [var**exp for var, exp in zip(variables, key)])
                 if degree_function(cleaned_term) > 2:
                     rhs = rhs.subs(
-                        cleaned_term, new_variables_dict[cleaned_term])
+                        cleaned_term, monomial_2_quadra[cleaned_term])
         new_rhs = rhs
         substitute_system.append(Equality(new_lhs, new_rhs))
 
@@ -183,7 +172,7 @@ def optimal_inner_quadratization(system: EquationSystem):
     print('The Optimal Quadratic Dissipative System is (with substitution): ')
     display(sub_OIQ_system.show_system_latex())
 
-    return OIQ_system, sub_OIQ_system, new_variables_dict_aux, map_variables
+    return OIQ_system, sub_OIQ_system, monomial_to_quadratic_form, map_variables
 
 # ------------------ Dissipative Quadratization ------------------
 

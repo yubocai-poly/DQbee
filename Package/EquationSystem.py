@@ -29,6 +29,7 @@ class EquationSystem:
             self._variables.add(eq.lhs)
             self._constants.update(eq.rhs.free_symbols)
 
+        # here constants are the variables that are not in the LHS of the system
         self._constants = self._constants - self._variables
         self.all_terms_RHS = self.get_all_terms_RHS(system)
         self.V = self._variables | {1}
@@ -207,7 +208,7 @@ class EquationSystem:
         valid_decomposition = []
 
         if selected_variable[1] == 'NS':
-            # Filter out variables with degree >= system_degree
+        # Filter out variables with degree >= system_degree
             for decompose in decomposition:
                 res = []
                 for i in range(2):
@@ -225,6 +226,8 @@ class EquationSystem:
             # Filter out variables with degree >= system_degree
             for decompose in decomposition:
                 res = []
+                if 1 in decompose:
+                    continue
                 for i in range(2):
                     if degree_function(decompose[i]) < d and decompose[i] not in self.V:
                         res.append(decompose[i])
@@ -236,6 +239,7 @@ class EquationSystem:
                     valid_decomposition.append(res)
                 else:
                     valid_decomposition.append(res)
+
         return valid_decomposition
 
     def calculate_polynomial_derivative(self, polynomial):
@@ -260,7 +264,7 @@ class EquationSystem:
         new_system.degree = self.degree
         new_system.V = new_system.variables | {1}
 
-        # update the all_terms_RHS
+        # update the all_terms_RHS and the degree of the system
         terms_dict = new_rhs.as_poly(list(self.variables)).as_dict()
         for term_tuple, coef in terms_dict.items():
             new_term = reduce(
