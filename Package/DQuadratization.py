@@ -37,54 +37,37 @@ def compute_largest_eigenvalue(matrix: sp.Matrix, type_system):
             return max_real_eigen
 
 
-def inner_quadratization(system: EquationSystem, d, optimal_result):
+def inner_quadratization_aux(system: EquationSystem, d, current_optimal):
     """
     Role: This function finds the optimal innter quadratization of a system
-    Input: system, dimension of the original system, optimal_result which is a list
-    Output: None, but the optimal_result will be updated
+    Input: system, dimension of the original system
+    Output: the optimal inner quadratization of the system
     """
+    optimal_result = current_optimal
+
     if len(system.NSquare) == 0 and len(system.NQuadratic) == 0:
-        if optimal_result[0] is None:
-            optimal_result[0] = system.variables
-        elif len(system.variables) < len(optimal_result[0]):
-            optimal_result[0] = system.variables
-        return
+        if optimal_result == None:
+            optimal_result = system.variables
+        elif len(system.variables) < len(optimal_result):
+            optimal_result = system.variables
+        return optimal_result
 
     subproblem_set = system.decompose_variable(d)
     subproblem_list = []
     for subproblem in subproblem_set:
-        if (optimal_result[0] is not None) and (len(subproblem) + len(system.variables) >= len(optimal_result[0]) or len(system.variables) + max(system.pruning_rule_ODQ_num, system.pruning_rule_OQ_num) >= len(optimal_result[0])):
+        if (optimal_result is not None) and (len(subproblem) + len(system.variables) >= len(optimal_result) or len(system.variables) + max(system.pruning_rule_ODQ_num, system.pruning_rule_OQ_num) >= len(optimal_result)):
             continue
         subproblem_list.append(system.update_system(subproblem))
+        # subproblem_list.append(calculate_new_subproblem(system, subproblem))
     for subproblem in subproblem_list:
-        inner_quadratization(subproblem, d, optimal_result)
+        optimal_result = inner_quadratization_aux(
+            subproblem, d, optimal_result)
 
-# def inner_quadratization(system: EquationSystem, d, current_optimal):
-#     """
-#     Role: This function finds the optimal innter quadratization of a system
-#     Input: system, dimension of the original system
-#     Output: the optimal inner quadratization of the system
-#     """
-#     optimal_result = current_optimal
+    return optimal_result
 
-#     if len(system.NSquare) == 0 and len(system.NQuadratic) == 0:
-#         if sys.dimension < current_optimal
-#             return system
-#          return current_optimal
 
-#     subproblem_set = system.decompose_variable(d)
-#     subproblem_list = []
-#     for subproblem in subproblem_set:
-#         if (optimal_result[0] is not None) and (len(subproblem) + len(system.variables) >= len(optimal_result[0]) or len(system.variables) + max(system.pruning_rule_ODQ_num, system.pruning_rule_OQ_num) >= len(optimal_result[0])):
-#             continue
-#         subproblem_list.append(system.update_system(subproblem))
-#         # subproblem_list.append(calculate_new_subproblem(system, subproblem))
-#     for subproblem in subproblem_list:
-#         current_optimal = inner_quadratization(subproblem, d, current_optimal)
-#         if optimal_result[0] is None or len(new_optimal_result[0]) < len(optimal_result[0]):
-#             optimal_result = new_optimal_result
-
-#     return optimal_result
+def inner_quadratization(system: EquationSystem, d):
+    return inner_quadratization_aux(system, d, None)
 
 
 def optimal_inner_quadratization(system: EquationSystem):
@@ -99,14 +82,12 @@ def optimal_inner_quadratization(system: EquationSystem):
         - map_variables: the dictionary of the mapping between the new introduced variables and the original variables, e.g. {w1: x1 ** 2}
     """
     d = system.degree
-    optimal_result = [None]
-    inner_quadratization(system, d, optimal_result)
-    # optimal_result = inner_quadratization(system, d)
+    optimal_result = inner_quadratization(system, d)
     monomial_2_quadra = {}
     monomial_to_quadratic_form = {}
     map_variables = {}
     substitute_system = []
-    OIQ_variables = optimal_result[0]
+    OIQ_variables = optimal_result
     introduced_variables = OIQ_variables - system.variables
     OIQ_system = system.update_system(introduced_variables)
     print('The Original System is: ')
@@ -124,7 +105,6 @@ def optimal_inner_quadratization(system: EquationSystem):
             monomial_2_quadra[variable] = symbols(
                 'w' + str(len(monomial_2_quadra) + 1 - num))
             map_variables[monomial_2_quadra[variable]] = variable
-
 
     # print the new introduced variables in latex
     print('The new introduced variables are: ')

@@ -73,7 +73,8 @@ def tuple_to_monomial(monomial_variables, monomial):
     """
     Transform a tuple to monomial form
     """
-    return sp.Mul(*[monomial_variables[i]**monomial[i] for i in range(len(monomial_variables))])
+    exponents = list(monomial)
+    return sp.prod([monomial_variables[i]**exponents[i] for i in range(len(monomial_variables))])
 
 
 def decomposition_monomial(monomial):
