@@ -59,17 +59,18 @@ def inner_quadratization(system: EquationSystem, d, optimal_result):
     for subproblem in subproblem_list:
         inner_quadratization(subproblem, d, optimal_result)
 
-# def inner_quadratization(system: EquationSystem, d):
+# def inner_quadratization(system: EquationSystem, d, current_optimal):
 #     """
 #     Role: This function finds the optimal innter quadratization of a system
 #     Input: system, dimension of the original system
 #     Output: the optimal inner quadratization of the system
 #     """
-#     optimal_result = [None]
+#     optimal_result = current_optimal
 
 #     if len(system.NSquare) == 0 and len(system.NQuadratic) == 0:
-#         optimal_result[0] = system.variables
-#         return optimal_result
+#         if sys.dimension < current_optimal
+#             return system
+#          return current_optimal
 
 #     subproblem_set = system.decompose_variable(d)
 #     subproblem_list = []
@@ -79,7 +80,7 @@ def inner_quadratization(system: EquationSystem, d, optimal_result):
 #         subproblem_list.append(system.update_system(subproblem))
 #         # subproblem_list.append(calculate_new_subproblem(system, subproblem))
 #     for subproblem in subproblem_list:
-#         new_optimal_result = inner_quadratization(subproblem, d)
+#         current_optimal = inner_quadratization(subproblem, d, current_optimal)
 #         if optimal_result[0] is None or len(new_optimal_result[0]) < len(optimal_result[0]):
 #             optimal_result = new_optimal_result
 
