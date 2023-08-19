@@ -245,7 +245,7 @@ def optimal_dissipative_quadratization(original_system: EquationSystem,
     print('The matrix  associated to the linear part system is:')
     display(Latex(rf"$${sp.latex(F1)}$$"))
 
-    return dissipative_system, F1
+    return dissipative_system, F1, map_variables
 
 
 def ComputeWeaklyNonlinearity(system: EquationSystem):

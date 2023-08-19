@@ -7,7 +7,7 @@ Edited by: Yubo Cai
 import sympy as sp
 
 
-def is_polynomial_function(expr: sp.Expr): 
+def is_polynomial_function(expr: sp.Expr):
     # test one term is polynomial or not
     if expr.is_Add or expr.is_Mul or _is_positive_numeric_power(expr):
         return True
@@ -55,7 +55,8 @@ def find_non_polynomial_backward(expr: sp.Expr):
         return expr
     return None
 
-def is_polynomial_function_all(expr: sp.Expr): 
+
+def is_polynomial_function_all(expr: sp.Expr):
     # test all terms are polynomial or not
     if find_non_polynomial(expr) is None:
         return True

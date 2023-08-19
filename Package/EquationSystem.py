@@ -208,7 +208,7 @@ class EquationSystem:
         valid_decomposition = []
 
         if selected_variable[1] == 'NS':
-        # Filter out variables with degree >= system_degree
+            # Filter out variables with degree >= system_degree
             for decompose in decomposition:
                 res = []
                 for i in range(2):
