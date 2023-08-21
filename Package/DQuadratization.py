@@ -9,7 +9,17 @@ from sympy.core.relational import Equality
 from IPython.display import Latex
 import sys
 sys.path.append("..")
-# from Package.DifferientialPoly import *
+
+
+def display_or_print(data):
+    """
+    find out which environment the code is running in and display or print the data
+    """
+    if 'ipykernel_launcher.py' in sys.argv[0]:
+        from IPython.display import display
+        display(data)
+    else:
+        print(data)
 
 
 def compute_largest_eigenvalue(matrix: sp.Matrix, type_system):
@@ -91,9 +101,9 @@ def optimal_inner_quadratization(system: EquationSystem):
     introduced_variables = OIQ_variables - system.variables
     OIQ_system = system.update_system(introduced_variables)
     print('The Original System is: ')
-    display(system.show_system_latex())
+    display_or_print(system.show_system_latex())
     print('The Optimal Dissipative Quadratization is: ')
-    display(OIQ_system.show_system_latex())
+    display_or_print(OIQ_system.show_system_latex())
 
     # for each new introduced variable, we create a new symbol corresponding to it, like w_1, w_2, ...
     num = 0
@@ -113,7 +123,7 @@ def optimal_inner_quadratization(system: EquationSystem):
         new_variables_latex = new_variables_latex + \
             f"{sp.latex(monomial_2_quadra[variable])} = {sp.latex(variable)} \\\\ "
     latex_ = f"\\begin{{cases}}\n{new_variables_latex}\n\\end{{cases}}"
-    display(Latex(rf"$${latex_}$$"))
+    display_or_print(Latex(rf"$${latex_}$$"))
 
     # Here monomial_to_quadratic_form which is the map from monomial to it's quadratic form only
     # monomial_2_quadra also contains the variable to itself
@@ -151,7 +161,7 @@ def optimal_inner_quadratization(system: EquationSystem):
 
     sub_OIQ_system = EquationSystem(substitute_system)
     print('The Optimal Quadratic Dissipative System is (with substitution): ')
-    display(sub_OIQ_system.show_system_latex())
+    display_or_print(sub_OIQ_system.show_system_latex())
 
     return OIQ_system, sub_OIQ_system, monomial_to_quadratic_form, map_variables
 
@@ -241,14 +251,14 @@ def optimal_dissipative_quadratization(original_system: EquationSystem,
 
     dissipative_system = EquationSystem(new_system)
     print('The converted Optimal Dissipative Quadratization System is: ')
-    display(dissipative_system.show_system_latex())
+    display_or_print(dissipative_system.show_system_latex())
     print('The matrix  associated to the linear part system is:')
-    display(Latex(rf"$${sp.latex(F1)}$$"))
+    display_or_print(Latex(rf"$${sp.latex(F1)}$$"))
 
     return dissipative_system, F1, map_variables
 
 
-def ComputeWeaklyNonlinearity(system: EquationSystem):
+def computeWeaklyNonlinearity(system: EquationSystem):
     """
     Role: Compute the bound |x| for a system being weakly nonlinear
     """
@@ -279,19 +289,19 @@ def ComputeWeaklyNonlinearity(system: EquationSystem):
                     F2[index, nonzero_indices[0] * n + nonzero_indices[1]] = coef
 
         index += 1
-    display(Latex(rf"$$F_{1}={sp.latex(F1)}$$"))
-    display(Latex(rf"$$F_{2}={sp.latex(F2)}$$"))
+    display_or_print(Latex(rf"$$F_{1}={sp.latex(F1)}$$"))
+    display_or_print(Latex(rf"$$F_{2}={sp.latex(F2)}$$"))
 
     largest_eigen_F1 = np.abs(
         max([complex(eigenvalue).real for eigenvalue in F1.eigenvals().keys()]))
     operator_norm_F2 = np.abs(F2.norm(2))
     expression = r"The system is said to be weakly nonlinear if the ratio $$R:=\frac{\left\|X_0\right\|\left\|F_2\right\|}{\left|\Re\left(\lambda_1\right)\right|} < 1 \Rightarrow 0 < \|X_0\| < \frac{\left|\Re\left(\lambda_1\right)\right|}{\left\|F_2\right\|}$$"
-    display(Latex(expression))
+    display_or_print(Latex(expression))
     if largest_eigen_F1 == 0:
-        display(Latex(
+        display_or_print(Latex(
             rf"The bound for $\|X\|$ is invalid since $\left|\Re\left(\lambda_1\right)\right|=0$"))
     else:
         upper_bound = operator_norm_F2 / largest_eigen_F1
-        display(Latex(
+        display_or_print(Latex(
             rf"The upper bound for $\|X\|$ is: $$0 < \|X\| < {upper_bound}$$ where $\left|\Re\left(\lambda_1\right)\right|={largest_eigen_F1}$ and $\left\|F_2\right\|={operator_norm_F2}$"))
-    return F2
+    return F2, upper_bound
