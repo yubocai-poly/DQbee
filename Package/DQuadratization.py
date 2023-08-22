@@ -65,6 +65,8 @@ def inner_quadratization_aux(system: EquationSystem, d, current_optimal):
     subproblem_set = system.decompose_variable(d)
     subproblem_list = []
     for subproblem in subproblem_set:
+        # Gleb: line is too long, I suggest to reorganize, for example, using
+        # result_lower_bound = len(system.variables) + max(system.pruning_rule_ODQ_num, system.pruning_rule_OQ_num)
         if (optimal_result is not None) and (len(subproblem) + len(system.variables) >= len(optimal_result) or len(system.variables) + max(system.pruning_rule_ODQ_num, system.pruning_rule_OQ_num) >= len(optimal_result)):
             continue
         subproblem_list.append(system.update_system(subproblem))
@@ -93,6 +95,7 @@ def optimal_inner_quadratization(system: EquationSystem):
     """
     d = system.degree
     optimal_result = inner_quadratization(system, d)
+    # Gleb: what does `monomial_2_quadra` mean? There should be either more informative name or a comment
     monomial_2_quadra = {}
     monomial_to_quadratic_form = {}
     map_variables = {}
@@ -141,6 +144,7 @@ def optimal_inner_quadratization(system: EquationSystem):
     variables = list(OIQ_system.variables)
     for equation in OIQ_system.system:
         lhs = equation.lhs
+        # Gleb: seems that you are still working with expressions hare
         rhs = equation.rhs.expand()
         new_lhs = None
         new_rhs = None
@@ -152,7 +156,7 @@ def optimal_inner_quadratization(system: EquationSystem):
             term_dict = term.as_poly(variables).as_dict()
             for key, value in term_dict.items():
                 cleaned_term = reduce(
-                    lambda x, y: x*y, [var**exp for var, exp in zip(variables, key)])
+                    lambda x, y: x*y, [var ** exp for var, exp in zip(variables, key)])
                 if degree_function(cleaned_term) > 2:
                     rhs = rhs.subs(
                         cleaned_term, monomial_2_quadra[cleaned_term])
@@ -257,7 +261,7 @@ def optimal_dissipative_quadratization(original_system: EquationSystem,
 
     return dissipative_system, F1, map_variables
 
-
+# Gleb: naming convention
 def computeWeaklyNonlinearity(system: EquationSystem):
     """
     Role: Compute the bound |x| for a system being weakly nonlinear

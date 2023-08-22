@@ -79,6 +79,7 @@ class EquationSystem:
 
         return '\n'.join(latex_system)
 
+    # Gleb: var_set sounds like a set of variables but seems in fact that it is a set of monomials...
     def max_degree_monomial(self, var_set):
         """
         This function compute the degree of the highest degree monomial in the system
@@ -114,6 +115,7 @@ class EquationSystem:
         variables = list(self.variables)
         for eq in system:
             rhs = eq.rhs
+            # Gleb: still not a polynomial...
             terms_dict = rhs.as_poly(variables).as_dict()
             for term_tuple, coef in terms_dict.items():
                 # combine the term together
@@ -207,6 +209,7 @@ class EquationSystem:
         decomposition = decomposition_monomial(selected_variable[0])
         valid_decomposition = []
 
+        # Gleb: still two nearly identical codes
         if selected_variable[1] == 'NS':
             # Filter out variables with degree >= system_degree
             for decompose in decomposition:
@@ -249,6 +252,7 @@ class EquationSystem:
             variable_derivative = diff(polynomial, variable)
             equation_variable_diff = self.dict_variables_equations[variable]
             derivative += variable_derivative * equation_variable_diff
+        # Gleb: expressions
         return sp.expand(derivative)
 
     def update_system_aux(self, new_variable):
