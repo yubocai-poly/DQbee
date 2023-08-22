@@ -268,6 +268,7 @@ def computeWeaklyNonlinearity(system: EquationSystem):
     F1 = sp.zeros(n, n)
     F2 = sp.zeros(n, (n ** 2))
     list_term = []
+    upper_bound = 0
     for equation in system.system:
         list_term.append(equation.lhs)
 
