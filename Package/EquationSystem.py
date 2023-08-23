@@ -73,19 +73,18 @@ class EquationSystem:
         system = self.system
         for eq in system:
             lhs = sp.latex(eq.lhs)
-            rhs = sp.latex(eq.rhs)
+            rhs = sp.latex(eq.rhs.as_expr())
             latex_eq = f"({lhs})' &= {rhs}\\\\" if eq != system[-1] else f"({lhs})' &= {rhs}"
             latex_system.append(latex_eq)
 
         return '\n'.join(latex_system)
 
-    # Gleb: var_set sounds like a set of variables but seems in fact that it is a set of monomials...
-    def max_degree_monomial(self, var_set):
+    def max_degree_monomial(self, monomials_set):
         """
         This function compute the degree of the highest degree monomial in the system
         """
         max_degree = 0
-        for monomial in var_set:
+        for monomial in monomials_set:
             degree_monomial = comb.degree_function(monomial)
             if degree_monomial > max_degree:
                 max_degree = degree_monomial
@@ -115,13 +114,12 @@ class EquationSystem:
         variables = list(self.variables)
         for eq in system:
             rhs = eq.rhs
-            # Gleb: still not a polynomial...
             terms_dict = rhs.as_poly(variables).as_dict()
             for term_tuple, coef in terms_dict.items():
                 # combine the term together
-                term = reduce(
-                    lambda x, y: x * y, [var**exp for var, exp in zip(variables, term_tuple)])
-
+                # Yubo: Here all the terms are in monomial form
+                term = sp.prod(
+                    [var**exp for var, exp in zip(variables, term_tuple)])
                 all_terms_RHS.add(term)
 
         return all_terms_RHS
@@ -201,6 +199,24 @@ class EquationSystem:
             else:
                 return min(NQ_score_dict, key=NQ_score_dict.get), 'NQ'
 
+    def process_decomposition(self, decomposition, d):
+        V = self.V
+        valid_decomposition = []
+        for decompose in decomposition:
+            res = []
+            for i in range(2):
+                if degree_function(decompose[i]) < d and decompose[i] not in V:
+                    res.append(decompose[i])
+            if len(res) == 0:
+                continue
+            elif len(res) == 2 and res[0] == res[1]:
+                valid_decomposition.append([res[0]])
+            elif len(res) == 2 and res[0] != res[1]:
+                valid_decomposition.append(res)
+            else:
+                valid_decomposition.append(res)
+        return valid_decomposition
+
     def decompose_variable(self, d):
         """
         Role: Find all the valid decompositions of the selected variable
@@ -209,51 +225,28 @@ class EquationSystem:
         decomposition = decomposition_monomial(selected_variable[0])
         valid_decomposition = []
 
-        # Gleb: still two nearly identical codes
         if selected_variable[1] == 'NS':
             # Filter out variables with degree >= system_degree
-            for decompose in decomposition:
-                res = []
-                for i in range(2):
-                    if degree_function(decompose[i]) < d and decompose[i] not in self.V:
-                        res.append(decompose[i])
-                if len(res) == 0:
-                    continue
-                elif len(res) == 2 and res[0] == res[1]:
-                    valid_decomposition.append([res[0]])
-                elif len(res) == 2 and res[0] != res[1]:
-                    valid_decomposition.append(res)
-                else:
-                    valid_decomposition.append(res)
+            valid_decomposition = self.process_decomposition(
+                decomposition, d)
+
         elif selected_variable[1] == 'NQ':
             # Filter out variables with degree >= system_degree
-            for decompose in decomposition:
-                res = []
-                if 1 in decompose:
-                    continue
-                for i in range(2):
-                    if degree_function(decompose[i]) < d and decompose[i] not in self.V:
-                        res.append(decompose[i])
-                if len(res) == 0:
-                    continue
-                elif len(res) == 2 and res[0] == res[1]:
-                    valid_decomposition.append([res[0]])
-                elif len(res) == 2 and res[0] != res[1]:
-                    valid_decomposition.append(res)
-                else:
-                    valid_decomposition.append(res)
+            decomposition = [
+                decompose for decompose in decomposition if 1 not in decompose]
+            valid_decomposition = self.process_decomposition(
+                decomposition, d)
 
         return valid_decomposition
 
-    def calculate_polynomial_derivative(self, polynomial):
+    def calculate_monomial_derivative(self, polynomial):
         derivative = 0
         variables = polynomial.free_symbols & self.variables
         for variable in variables:
             variable_derivative = diff(polynomial, variable)
             equation_variable_diff = self.dict_variables_equations[variable]
             derivative += variable_derivative * equation_variable_diff
-        # Gleb: expressions
-        return sp.expand(derivative)
+        return derivative.as_poly(list(self.variables))
 
     def update_system_aux(self, new_variable):
         """
@@ -261,7 +254,7 @@ class EquationSystem:
         Input: old system, adding variable
         Output: new system
         """
-        new_rhs = self.calculate_polynomial_derivative(new_variable)
+        new_rhs = self.calculate_monomial_derivative(new_variable)
         eq = Equality(new_variable, new_rhs)
         new_system = copy.deepcopy(self)
         new_system._variables.add(new_variable)

@@ -51,7 +51,7 @@ def test_dissipative_inner_quadratization():
 
 
 # ---------------- Testing for Weakly nonlinearity ----------------
-def test_computeWeaklyNonlinearity():
+def test_compute_weakly_nonlinearity():
     mu = -1
     system_vanderpol_ = [
         sp.Eq(y, z),
@@ -65,7 +65,7 @@ def test_computeWeaklyNonlinearity():
         eq_system_vanderpol_)
     DIQ_vanderpol_, F1_, map_variables_ = optimal_dissipative_quadratization(
         eq_system_vanderpol, sub_OIQ_vanderpol_, monomial_to_quadratic_form_, map_variables_, [-3])
-    F2, upper_bound = computeWeaklyNonlinearity(DIQ_vanderpol_)
+    F2, upper_bound = compute_weakly_nonlinearity(DIQ_vanderpol_)
     assert (test_upper_bound - upper_bound) < 1e-4 and F2 == test_F2
 
 

@@ -65,9 +65,10 @@ def inner_quadratization_aux(system: EquationSystem, d, current_optimal):
     subproblem_set = system.decompose_variable(d)
     subproblem_list = []
     for subproblem in subproblem_set:
-        # Gleb: line is too long, I suggest to reorganize, for example, using
-        # result_lower_bound = len(system.variables) + max(system.pruning_rule_ODQ_num, system.pruning_rule_OQ_num)
-        if (optimal_result is not None) and (len(subproblem) + len(system.variables) >= len(optimal_result) or len(system.variables) + max(system.pruning_rule_ODQ_num, system.pruning_rule_OQ_num) >= len(optimal_result)):
+        pruning_lower_bound = len(
+            system.variables) + max(system.pruning_rule_ODQ_num, system.pruning_rule_OQ_num)
+        naive_lower_bound = len(subproblem) + len(system.variables)
+        if (optimal_result is not None) and (naive_lower_bound >= len(optimal_result) or pruning_lower_bound >= len(optimal_result)):
             continue
         subproblem_list.append(system.update_system(subproblem))
         # subproblem_list.append(calculate_new_subproblem(system, subproblem))
@@ -95,7 +96,7 @@ def optimal_inner_quadratization(system: EquationSystem):
     """
     d = system.degree
     optimal_result = inner_quadratization(system, d)
-    # Gleb: what does `monomial_2_quadra` mean? There should be either more informative name or a comment
+    # Here monomial_2_quadra is the map from monomial to it's quadratic form, this includes the monomial expression of introduced variables to the new introduced variables, eg. x1 ** 2 -> w1, and includes the monomial expression to it quadratic form, eg. x1 ** 2 * x2 -> w1 * x2
     monomial_2_quadra = {}
     monomial_to_quadratic_form = {}
     map_variables = {}
@@ -144,23 +145,22 @@ def optimal_inner_quadratization(system: EquationSystem):
     variables = list(OIQ_system.variables)
     for equation in OIQ_system.system:
         lhs = equation.lhs
-        # Gleb: seems that you are still working with expressions hare
-        rhs = equation.rhs.expand()
+        rhs = equation.rhs.as_poly(variables)
         new_lhs = None
-        new_rhs = None
+        new_rhs = rhs.as_expr()
         # substitute the left hand side to make the degree is 1
         if lhs in monomial_2_quadra_copy:
             new_lhs = monomial_2_quadra_copy[lhs]
         # now we substitute the right handside to make sure it quadratic
-        for term in sp.expand(rhs).as_ordered_terms():
-            term_dict = term.as_poly(variables).as_dict()
-            for key, value in term_dict.items():
-                cleaned_term = reduce(
-                    lambda x, y: x*y, [var ** exp for var, exp in zip(variables, key)])
-                if degree_function(cleaned_term) > 2:
-                    rhs = rhs.subs(
-                        cleaned_term, monomial_2_quadra[cleaned_term])
-        new_rhs = rhs
+        for key, value in rhs.as_dict().items():
+            cleaned_term = reduce(
+                lambda x, y: x*y, [var ** exp for var, exp in zip(variables, key)])
+            if degree_function(cleaned_term) > 2:
+                new_rhs = new_rhs.subs(
+                    cleaned_term, monomial_2_quadra[cleaned_term])
+
+        # Here we give the output of the substitution, that's why I use sp.Expr to make sure the output is a sympy expression
+        # Yubo: Also, the substitution for sp.Poly is not stable, it occurs an error of not substituting the once when I run the code for ten times
         substitute_system.append(Equality(new_lhs, new_rhs))
 
     sub_OIQ_system = EquationSystem(substitute_system)
@@ -261,8 +261,8 @@ def optimal_dissipative_quadratization(original_system: EquationSystem,
 
     return dissipative_system, F1, map_variables
 
-# Gleb: naming convention
-def computeWeaklyNonlinearity(system: EquationSystem):
+
+def compute_weakly_nonlinearity(system: EquationSystem):
     """
     Role: Compute the bound |x| for a system being weakly nonlinear
     """
