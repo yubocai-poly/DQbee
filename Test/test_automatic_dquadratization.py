@@ -24,10 +24,10 @@ system_vanderpol = [
 ]
 
 eq_system_vanderpol = EquationSystem(system_vanderpol)
-OIQ_vanderpol, sub_OIQ_vanderpol, monomial_to_quadratic_form, map_variables = optimal_inner_quadratization(
+oiq_vanderpol, sub_oiq_vanderpol, monomial_to_quadratic_form, map_variables = optimal_inner_quadratization(
     eq_system_vanderpol)
-DIQ_vanderpol, F1, map_variables = optimal_dissipative_quadratization(
-    eq_system_vanderpol, sub_OIQ_vanderpol, monomial_to_quadratic_form, map_variables, [-3])
+Diq_vanderpol, F1, map_variables = optimal_dissipative_quadratization(
+    eq_system_vanderpol, sub_oiq_vanderpol, monomial_to_quadratic_form, map_variables, [-3])
 
 
 # ---------------- Testing for Quadratization Part ----------------
@@ -36,18 +36,18 @@ def test_input_system():
 
 
 def test_optimal_inner_quadratization():
-    test_OIQ_vanderpol_system = [sp.Eq(y, z), sp.Eq(
+    test_oiq_vanderpol_system = [sp.Eq(y, z), sp.Eq(
         z, mu*z*(1 - y**2) - y), sp.Eq(y**2, 2*y*z)]
-    test_sub_OIQ_vanderpol_system = [sp.Eq(y, z), sp.Eq(
+    test_sub_oiq_vanderpol_system = [sp.Eq(y, z), sp.Eq(
         z, -mu*w1*z + mu*z - y), sp.Eq(w1, 2*y*z)]
-    assert OIQ_vanderpol.system == test_OIQ_vanderpol_system and sub_OIQ_vanderpol.system == test_sub_OIQ_vanderpol_system
+    assert oiq_vanderpol.system == test_oiq_vanderpol_system and sub_oiq_vanderpol.system == test_sub_oiq_vanderpol_system
 
 
 def test_dissipative_inner_quadratization():
     test_F1 = sp.Matrix([[0, 1, 0], [-1, mu, 0], [0, 0, -3]])
-    test_DIQ_vanderpol_system = [sp.Eq(y, z), sp.Eq(
+    test_Diq_vanderpol_system = [sp.Eq(y, z), sp.Eq(
         z, -mu*w1*z + mu*z - y), sp.Eq(w1, -3*w1 + 3*y**2 + 2*y*z)]
-    assert DIQ_vanderpol.system == test_DIQ_vanderpol_system and F1 == test_F1
+    assert Diq_vanderpol.system == test_Diq_vanderpol_system and F1 == test_F1
 
 
 # ---------------- Testing for Weakly nonlinearity ----------------
@@ -61,11 +61,11 @@ def test_compute_weakly_nonlinearity():
     test_upper_bound = 2 * math.sqrt(13)
     test_F2 = sp.Matrix([[0, 0, 0, 0, 0, 0, 0, 0, 0], [
         0, 0, 0, 0, 0, 1, 0, 0, 0], [3, 2, 0, 0, 0, 0, 0, 0, 0]])
-    OIQ_vanderpol_, sub_OIQ_vanderpol_, monomial_to_quadratic_form_, map_variables_ = optimal_inner_quadratization(
+    oiq_vanderpol_, sub_oiq_vanderpol_, monomial_to_quadratic_form_, map_variables_ = optimal_inner_quadratization(
         eq_system_vanderpol_)
-    DIQ_vanderpol_, F1_, map_variables_ = optimal_dissipative_quadratization(
-        eq_system_vanderpol, sub_OIQ_vanderpol_, monomial_to_quadratic_form_, map_variables_, [-3])
-    F2, upper_bound = compute_weakly_nonlinearity(DIQ_vanderpol_)
+    Diq_vanderpol_, F1_, map_variables_ = optimal_dissipative_quadratization(
+        eq_system_vanderpol, sub_oiq_vanderpol_, monomial_to_quadratic_form_, map_variables_, [-3])
+    F2, upper_bound = compute_weakly_nonlinearity(Diq_vanderpol_)
     assert (test_upper_bound - upper_bound) < 1e-4 and F2 == test_F2
 
 
@@ -81,7 +81,7 @@ def test_simulation_original_system():
 
 
 def test_simulation_DQ_system():
-    state_dissipative = system_to_odeint(DIQ_vanderpol, t=[
+    state_dissipative = system_to_odeint(Diq_vanderpol, t=[
                                          0, 20, 1000], symbolic_args=symbolic_args, initial_state=initial_state)
     assert state_dissipative is not None
 

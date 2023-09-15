@@ -6,6 +6,7 @@ from Package.Combinations import *
 from functools import reduce
 from sympy import symbols, diff, expand
 from sympy.core.relational import Equality
+from sympy import symbols, total_degree
 from IPython.display import Latex
 import sys
 sys.path.append("..")
@@ -83,14 +84,14 @@ def inner_quadratization(system: EquationSystem, d):
     return inner_quadratization_aux(system, d, None)
 
 
-def optimal_inner_quadratization(system: EquationSystem):
+def optimal_inner_quadratization(system: EquationSystem, display=True):
     """
     Role: find the optimal inner quadratization of a system
     Input: 
         - system
     Output: 
-        - OIQ_system: the optimal inner quadratization of the system
-        - sub_OIQ_system: the optimal system after substituting the new introduced variables
+        - oiq_system: the optimal inner quadratization of the system
+        - sub_oiq_system: the optimal system after substituting the new introduced variables
         - monomial_to_quadratic_form: the sub dictionary from monomial_2_quadra which only contain the quadratic expression of new introduced variables, this output is used for Optimal DQ function
         - map_variables: the dictionary of the mapping between the new introduced variables and the original variables, e.g. {w1: x1 ** 2}
     """
@@ -101,17 +102,18 @@ def optimal_inner_quadratization(system: EquationSystem):
     monomial_to_quadratic_form = {}
     map_variables = {}
     substitute_system = []
-    OIQ_variables = optimal_result
-    introduced_variables = OIQ_variables - system.variables
-    OIQ_system = system.update_system(introduced_variables)
-    print('The Original System is: ')
-    display_or_print(system.show_system_latex())
-    print('The Optimal Dissipative Quadratization is: ')
-    display_or_print(OIQ_system.show_system_latex())
+    oiq_variables = optimal_result
+    introduced_variables = oiq_variables - system.variables
+    oiq_system = system.update_system(introduced_variables)
+    if display:
+        print('The Original System is: ')
+        display_or_print(system.show_system_latex())
+        print('The Optimal Dissipative Quadratization is: ')
+        display_or_print(oiq_system.show_system_latex())
 
     # for each new introduced variable, we create a new symbol corresponding to it, like w_1, w_2, ...
     num = 0
-    for variable in OIQ_variables:
+    for variable in oiq_variables:
         if variable in system.variables:
             monomial_2_quadra[variable] = variable
             num += 1
@@ -121,19 +123,21 @@ def optimal_inner_quadratization(system: EquationSystem):
             map_variables[monomial_2_quadra[variable]] = variable
 
     # print the new introduced variables in latex
-    print('The new introduced variables are: ')
+    if display:
+        print('The new introduced variables are: ')
     new_variables_latex = ''
     for variable in introduced_variables:
         new_variables_latex = new_variables_latex + \
             f"{sp.latex(monomial_2_quadra[variable])} = {sp.latex(variable)} \\\\ "
     latex_ = f"\\begin{{cases}}\n{new_variables_latex}\n\\end{{cases}}"
-    display_or_print(Latex(rf"$${latex_}$$"))
+    if display:
+        display_or_print(Latex(rf"$${latex_}$$"))
 
     # Here monomial_to_quadratic_form which is the map from monomial to it's quadratic form only
     # monomial_2_quadra also contains the variable to itself
     monomial_2_quadra_copy = copy.deepcopy(monomial_2_quadra)
-    for variable1 in OIQ_variables:
-        for variable2 in OIQ_variables:
+    for variable1 in oiq_variables:
+        for variable2 in oiq_variables:
             if variable1 in introduced_variables or variable2 in introduced_variables:
                 monomial_2_quadra[variable1 * variable2] = monomial_2_quadra_copy[variable1] * \
                     monomial_2_quadra_copy[variable2]
@@ -142,8 +146,8 @@ def optimal_inner_quadratization(system: EquationSystem):
     # uncomment the following line if not make the whole rhs quadratic
     # monomial_2_quadra.update(monomial_2_quadra)
 
-    variables = list(OIQ_system.variables)
-    for equation in OIQ_system.system:
+    variables = list(oiq_system.variables)
+    for equation in oiq_system.system:
         lhs = equation.lhs
         rhs = equation.rhs.as_poly(variables)
         new_lhs = None
@@ -163,25 +167,27 @@ def optimal_inner_quadratization(system: EquationSystem):
         # Yubo: Also, the substitution for sp.Poly is not stable, it occurs an error of not substituting the once when I run the code for ten times
         substitute_system.append(Equality(new_lhs, new_rhs))
 
-    sub_OIQ_system = EquationSystem(substitute_system)
-    print('The Optimal Quadratic Dissipative System is (with substitution): ')
-    display_or_print(sub_OIQ_system.show_system_latex())
+    sub_oiq_system = EquationSystem(substitute_system)
+    if display:
+        print('The Optimal Quadratic Dissipative System is (with substitution): ')
+        display_or_print(sub_oiq_system.show_system_latex())
 
-    return OIQ_system, sub_OIQ_system, monomial_to_quadratic_form, map_variables
+    return oiq_system, sub_oiq_system, monomial_to_quadratic_form, map_variables
 
 # ------------------ Dissipative Quadratization ------------------
 
 
 def optimal_dissipative_quadratization(original_system: EquationSystem,
-                                       IQ_system: EquationSystem,
+                                       iq_system: EquationSystem,
                                        variables_dict: dict,
                                        map_variables: dict,
-                                       Input_diagonal=None):
+                                       Input_diagonal=None,
+                                       display=True):
     """
     Role: Compute the Optimal Dissipative Quadratization of a system
     Input:
         - original_system: the original system
-        - IQ—system: the optimal inner-quadratic system from the original system, need to be the one with substitution
+        - iq—system: the optimal inner-quadratic system from the original system, need to be the one with substitution
         - variables_dict: the dictionary of the new introduced variables, e.g. {x1 ** 2: w1}
         - map_variables: the dictionary of the mapping between the new introduced variables and the original variables, e.g. {w1: x1 ** 2}
         - Input_diagonal: the list of values of the diagonal of F1 that we want to input, if None, we just use the largest eigenvalue of F1_original as default
@@ -190,17 +196,17 @@ def optimal_dissipative_quadratization(original_system: EquationSystem,
         - Latex print of the system
         - Latex print of F1
     """
-    if not (len(IQ_system.NQuadratic) == 0 and len(IQ_system.NSquare) == 0):
+    if not (len(iq_system.NQuadratic) == 0 and len(iq_system.NSquare) == 0):
         raise ValueError(
             'The system (second input) is not a inner-quadratic, please enter a inner-quadratic system.')
     n_original = original_system.dimension
-    n = IQ_system.dimension
+    n = iq_system.dimension
     F1_original = sp.zeros(n_original)
     F1 = sp.zeros(n)
     list_term = []
     type_system = None
     original_variables = list(original_system.variables)
-    for equation in IQ_system.system:
+    for equation in iq_system.system:
         list_term.append(equation.lhs)
     index = 0
 
@@ -214,21 +220,26 @@ def optimal_dissipative_quadratization(original_system: EquationSystem,
                 F1_original[index, list_term.index(new_term)] = coef
         index += 1
 
-    print('------------------------------ Optimal Dissipative Quadratization ------------------------------')
+    if display:
+        print('------------------------------ Optimal Dissipative Quadratization ------------------------------')
     if original_system.constants != set():
-        print('The system contains symbolic constants. Therefore, we cannot make sure that the original system is dissipative.')
-        print('If the system can not jusity which eigenvalue is the largest one due to the symbolic constants, the program will choose the first one as the default value for the largest eigenvalue.')
+        if display:
+            print('The system contains symbolic constants. Therefore, we cannot make sure that the original system is dissipative.')
+            print('If the system can not jusity which eigenvalue is the largest one due to the symbolic constants, the program will choose the first one as the default value for the largest eigenvalue.')
         type_system = 'symbolic'
     else:
         type_system = 'numeric'
 
     largest_eigenvalue = compute_largest_eigenvalue(F1_original, type_system)
-    print('The eigenvalue with the largest real part is (real part): ',
-          largest_eigenvalue)
+    if display:
+        print('The eigenvalue with the largest real part is (real part): ',
+              largest_eigenvalue)
 
     if Input_diagonal == None:
         Input_diagonal = [largest_eigenvalue] * n
-        print('Mode: Default diagonal value, we will choose the largest eigenvalue as the diagonal value.')
+        if display:
+            print(
+                'Mode: Default diagonal value, we will choose the largest eigenvalue as the diagonal value.')
     elif len(Input_diagonal) != n - n_original:
         raise ValueError(
             f'The length of the input diagonal is {len(Input_diagonal)}, but the length of the diagonal should be {n - n_original}')
@@ -240,9 +251,9 @@ def optimal_dissipative_quadratization(original_system: EquationSystem,
     for i in range(n_original, n):
         F1[i, i] = Input_diagonal[i - n_original]
 
-    new_system = IQ_system.system[0:n_original]
+    new_system = iq_system.system[0:n_original]
     for i in range(n_original, n):
-        equation = IQ_system.system[i]
+        equation = iq_system.system[i]
         lhs = equation.lhs
         if map_variables[lhs] not in variables_dict:
             rhs = Input_diagonal[i - n_original] * lhs + equation.rhs - \
@@ -254,20 +265,26 @@ def optimal_dissipative_quadratization(original_system: EquationSystem,
         new_system.append(Equality(lhs, rhs))
 
     dissipative_system = EquationSystem(new_system)
-    print('The converted Optimal Dissipative Quadratization System is: ')
-    display_or_print(dissipative_system.show_system_latex())
-    print('The matrix  associated to the linear part system is:')
-    display_or_print(Latex(rf"$${sp.latex(F1)}$$"))
+    if display:
+        print('The converted Optimal Dissipative Quadratization System is: ')
+        display_or_print(dissipative_system.show_system_latex())
+        print('The matrix  associated to the linear part system is:')
+        display_or_print(Latex(rf"$${sp.latex(F1)}$$"))
 
     return dissipative_system, F1, map_variables
 
+# -------------------------------------------------------------------
+# Compute the weakly nonlinearity bound for |x|
+# -------------------------------------------------------------------
 
-def compute_weakly_nonlinearity(system: EquationSystem):
+
+def compute_weakly_nonlinearity(system: EquationSystem, display=True):
     """
     Role: Compute the bound |x| for a system being weakly nonlinear
     """
-    print("-------------------------- Compute Weakly Nonlinearity bound for |x| --------------------------")
-    print("-------------------------- Warning: Please enter a quadratic ODE system --------------------------")
+    if display:
+        print("-------------------------- Compute Weakly Nonlinearity bound for |x| --------------------------")
+        print("-------------------------- Warning: Please enter a quadratic ODE system --------------------------")
     n = system.dimension
     F1 = sp.zeros(n, n)
     F2 = sp.zeros(n, (n ** 2))
@@ -294,19 +311,234 @@ def compute_weakly_nonlinearity(system: EquationSystem):
                     F2[index, nonzero_indices[0] * n + nonzero_indices[1]] = coef
 
         index += 1
-    display_or_print(Latex(rf"$$F_{1}={sp.latex(F1)}$$"))
-    display_or_print(Latex(rf"$$F_{2}={sp.latex(F2)}$$"))
+    if display:
+        display_or_print(Latex(rf"$$F_{1}={sp.latex(F1)}$$"))
+        display_or_print(Latex(rf"$$F_{2}={sp.latex(F2)}$$"))
 
     largest_eigen_F1 = np.abs(
         max([complex(eigenvalue).real for eigenvalue in F1.eigenvals().keys()]))
     operator_norm_F2 = np.abs(F2.norm(2))
     expression = r"The system is said to be weakly nonlinear if the ratio $$R:=\frac{\left\|X_0\right\|\left\|F_2\right\|}{\left|\Re\left(\lambda_1\right)\right|} < 1 \Rightarrow 0 < \|X_0\| < \frac{\left|\Re\left(\lambda_1\right)\right|}{\left\|F_2\right\|}$$"
-    display_or_print(Latex(expression))
+    if display:
+        display_or_print(Latex(expression))
     if largest_eigen_F1 == 0:
-        display_or_print(Latex(
-            rf"The bound for $\|X\|$ is invalid since $\left|\Re\left(\lambda_1\right)\right|=0$"))
+        if display:
+            display_or_print(Latex(
+                rf"The bound for $\|X\|$ is invalid since $\left|\Re\left(\lambda_1\right)\right|=0$"))
     else:
         upper_bound = operator_norm_F2 / largest_eigen_F1
-        display_or_print(Latex(
-            rf"The upper bound for $\|X\|$ is: $$0 < \|X\| < {upper_bound}$$ where $\left|\Re\left(\lambda_1\right)\right|={largest_eigen_F1}$ and $\left\|F_2\right\|={operator_norm_F2}$"))
+        if display:
+            display_or_print(Latex(
+                rf"The upper bound for $\|X\|$ is: $$0 < \|X\| < {upper_bound}$$ where $\left|\Re\left(\lambda_1\right)\right|={largest_eigen_F1}$ and $\left\|F_2\right\|={operator_norm_F2}$"))
     return F2, upper_bound
+
+# -------------------------------------------------------------------
+# Algorithm 2 - Compute the dissipative quadratization with one equilibrium
+# -------------------------------------------------------------------
+
+
+def system_transformation(system: list,
+                          equilibrium: dict):
+    # Create a substitution dictionary where each variable is replaced with a new symbol
+    substitution = {var: sp.Symbol(f'u{index}') for index, var in enumerate(
+        equilibrium.keys(), start=1)}
+
+    # Create a coordinate transformation dictionary, e.g., {'u1': y - 3}
+    coordinate_transformation = {var: new_var + value for new_var,
+                                 (var, value) in zip(substitution.values(), equilibrium.items())}
+
+    # Create a new system where each equation has been coordinate-transformed
+    transformed_system = []
+    for eq in system:
+        # Only replace variables on the left side
+        lhs = eq.lhs.subs(substitution)
+        # Replace variables and constants on the right side
+        rhs = eq.rhs.subs(coordinate_transformation).expand()
+        transformed_system.append(sp.Eq(lhs, rhs))
+
+    return transformed_system, {v: k - equilibrium[k] for k, v in substitution.items()}
+
+
+def dquadratization_one_equilibrium(system: EquationSystem,
+                                    equilibrium: dict,
+                                    display=True):
+    # checking the input, wheter the number of equilibrium is equal to the number of variables or not
+    if len(equilibrium) != system.dimension:
+        raise ValueError(
+            'The dimension of the equilibrium point is not equal to the number of variables in the system, please check the input')
+
+    if display:
+        print("-------------------------- Compute a quadratization dissipative at a given equilibrium --------------------------")
+        print("The system before coordinate transformation is: ")
+        display_or_print(system.show_system_latex())
+        print("-------------------------- Dissipative Quadratization on transformed system --------------------------")
+    transformed_system, coordinate_transformation = system_transformation(
+        system.system, equilibrium)
+    transformed_eq_system = EquationSystem(transformed_system)
+    oiq_transformed_eq_system = optimal_inner_quadratization(
+        transformed_eq_system)
+    odq_transformed_eq_system = optimal_dissipative_quadratization(
+        transformed_eq_system, oiq_transformed_eq_system[1], oiq_transformed_eq_system[2], oiq_transformed_eq_system[3])
+
+    return odq_transformed_eq_system, coordinate_transformation, oiq_transformed_eq_system
+
+# -------------------------------------------------------------------
+# Algorithm 3 - Compute the dissipative quadratization with multiple equilibrium
+# -------------------------------------------------------------------
+
+
+def sort_equation_system(system: EquationSystem,
+                         map_variables: dict):
+    sorted_system = [0] * system.dimension
+    degree_dict = {k: total_degree(v.as_poly())
+                   for k, v in map_variables.items()}
+    sorted_variables = sorted(degree_dict, key=degree_dict.get)
+    new_variables = symbols(
+        ','.join(f'g{i+1}' for i in range(len(sorted_variables))))
+    if not isinstance(new_variables, tuple):
+        new_variables = [new_variables]
+    new_variables_expression = {
+        new_variables[i]: map_variables[sorted_variables[i]] for i in range(len(sorted_variables))}
+    origin_to_new_variables = {sorted_variables[i]: new_variables[i] for i in range(
+        len(sorted_variables))}  # from old to new
+
+    index = 0
+    for equation in system.system:
+        lhs = equation.lhs
+        rhs = equation.rhs
+        if lhs not in map_variables.keys():
+            rhs = rhs.subs(origin_to_new_variables).expand()
+            sorted_system[index] = sp.Eq(lhs, rhs)
+            index += 1
+        else:
+            new_lhs = origin_to_new_variables[lhs]
+            new_rhs = system.dict_variables_equations[lhs].subs(
+                origin_to_new_variables).expand()
+            position = new_variables.index(new_lhs) + index
+            sorted_system[position] = sp.Eq(new_lhs, new_rhs)
+
+    new_eq_system = EquationSystem(sorted_system)
+    return new_eq_system, new_variables_expression
+
+
+def innerquadratic_representation(map_variables: dict):
+    variable_to_quadratic_form = {}
+    map_variables_inverse = {v: k for k, v in map_variables.items()}
+    # the degree of variables is increasing
+    map_variables_value_list = list(map_variables.values())
+
+    for variable, expression in map_variables.items():
+        if degree_function(expression) == 2:
+            variable_to_quadratic_form[variable] = expression
+        else:
+            for el in map_variables_value_list:
+                divisor, reminder = sp.div(expression, el)
+                if reminder == 0 and divisor != 1:
+                    if degree_function(divisor) == 1:
+                        variable_to_quadratic_form[variable] = divisor * \
+                            map_variables_inverse[el]
+                        break
+                    elif divisor in map_variables_value_list:
+                        variable_to_quadratic_form[variable] = map_variables_inverse[divisor] * \
+                            map_variables_inverse[el]
+                        break
+                else:
+                    continue
+
+    return variable_to_quadratic_form
+
+
+def equilibrium_list_to_dict(system: EquationSystem,
+                             equilibrium: list):
+    equilibrium_dict = []
+    n = system.dimension
+    list_lhs = [lhs for lhs in system.dict_variables_equations.keys()]
+    for equilibria in equilibrium:
+        equilibria_dict = {}
+        if len(equilibria) != n:
+            raise ValueError(
+                'The dimension of the equilibrium point is not equal to the number of variables in the system, please check the input')
+        for i in range(n):
+            equilibria_dict[list_lhs[i]] = equilibria[i]
+        equilibrium_dict.append(equilibria_dict)
+    return equilibrium_dict
+
+
+def dquadratization_multi_equilibrium(system: EquationSystem,
+                                      equilibrium: list,
+                                      display=True):
+    lambda_ = sp.symbols('lambda')
+    if display:
+        print("-------------------------- Compute a quadratization dissipative with multi given equilibrium --------------------------")
+        print("The original system is: ")
+        display_or_print(system.show_system_latex())
+    list_of_equilibrium_dict = equilibrium_list_to_dict(
+        system, equilibrium)
+
+    innerquadratic_system, map_variables = optimal_inner_quadratization(
+        system, display=False)[1], optimal_inner_quadratization(system, display=False)[3]
+    sorted_system, map_variables_expression = sort_equation_system(
+        innerquadratic_system, map_variables)
+    variable_to_quadratic_form = innerquadratic_representation(
+        map_variables_expression)
+
+    # compute the system substract with lambda * (lhs - quadratic form)
+    substract_system = []
+    rhs_for_jacobian = []
+    lhs_list = []
+    for eq in sorted_system.system:
+        lhs = eq.lhs
+        rhs = eq.rhs
+        lhs_list.append(lhs)
+        if lhs not in map_variables_expression:
+            substract_system.append(sp.Eq(lhs, rhs))
+            rhs_for_jacobian.append(rhs)
+        else:
+            new_rhs = rhs - lambda_ * (lhs - variable_to_quadratic_form[lhs])
+            substract_system.append(sp.Eq(lhs, new_rhs.expand()))
+            rhs_for_jacobian.append(new_rhs.expand())
+
+    substract_eq_system = EquationSystem(substract_system)
+
+    if display:
+        print("-------------------------- The Dissipative quadratized system --------------------------")
+        display_or_print(substract_eq_system.show_system_latex())
+
+    # compute the jacobian matrix of the system
+    jacobian_matrix = sp.Matrix(rhs_for_jacobian).jacobian(lhs_list)
+    introduced_value_dict = {
+        variable: 0 for variable in map_variables_expression.keys()}
+
+    lambda_value = 1
+    while True:
+        # plug in the value
+        jacobian_matrix_value = jacobian_matrix.subs(lambda_, lambda_value)
+        jacobian_matrix_value = jacobian_matrix_value.subs(
+            introduced_value_dict)
+        all_eigenvalues_negative = True
+        for equilibrium in list_of_equilibrium_dict:
+            jacobian_matrix_value = jacobian_matrix_value.subs(equilibrium)
+            eigenvalues = list(jacobian_matrix_value.eigenvals().keys())
+            max_real_eigen = max(
+                [complex(eigenvalue).real for eigenvalue in eigenvalues])
+            if max_real_eigen >= 0:
+                # if the largest real part eigenvalue is not negative, then we need to increase the lambda value
+                all_eigenvalues_negative = False
+                lambda_value *= 2
+                break
+        if all_eigenvalues_negative:
+            break
+
+    if display:
+        print("-------------------------- The lambda value --------------------------")
+        print('The lambda value is: ', lambda_value)
+        print("-------------------------- The Dissipative quadratized system with lambda value --------------------------")
+        substract_system_with_lambda = [sp.Eq(lhs, rhs.subs(
+            lambda_, lambda_value)) for lhs, rhs in zip(lhs_list, rhs_for_jacobian)]
+        substract_eq_system_with_lambda = EquationSystem(
+            substract_system_with_lambda)
+        display_or_print(substract_eq_system_with_lambda.show_system_latex())
+        print("-------------------------- The Jacobian matrix --------------------------")
+        display_or_print(Latex(rf"$$J={sp.latex(jacobian_matrix)}$$"))
+
+    return lambda_value, substract_eq_system_with_lambda
