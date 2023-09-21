@@ -339,6 +339,15 @@ def compute_weakly_nonlinearity(system: EquationSystem, display=True):
 
 def system_transformation(system: list,
                           equilibrium: dict):
+    """
+    Role: This function perform the coordinate transformation on the system at a given equilibrium point
+    Input:
+        - system: the input system, represented as a list of equations
+        - equilibrium: the equilibrium point, need to indicate the value of all the variables
+    Output:
+        - transformed_system: the system after coordinate transformation
+        - coordinate_transformation: the dictionary of the coordinate transformation, e.g. {'u1': y - 3}
+    """
     # Create a substitution dictionary where each variable is replaced with a new symbol
     substitution = {var: sp.Symbol(f'u{index}') for index, var in enumerate(
         equilibrium.keys(), start=1)}
@@ -362,6 +371,16 @@ def system_transformation(system: list,
 def dquadratization_one_equilibrium(system: EquationSystem,
                                     equilibrium: dict,
                                     display=True):
+    """
+        Role: The system compute the dissipative quadratization of a system at a given equilibrium point (Algorithm 2 in the paper)
+        Input:
+            - system: the input system, represented as a list of equations
+            - equilibrium: the equilibrium point, need to indicate the value of all the variables
+        Output:
+            - odq_transformed_eq_system: the dissipative quadratization of the system after coordinate transformation
+            - coordinate_transformation: the dictionary of the coordinate transformation, e.g. {'u1': y - 3}
+            - oiq_transformed_eq_system: the optimal inner-quadratic system of the system after coordinate transformation
+    """
     # checking the input, wheter the number of equilibrium is equal to the number of variables or not
     if len(equilibrium) != system.dimension:
         raise ValueError(
@@ -389,6 +408,12 @@ def dquadratization_one_equilibrium(system: EquationSystem,
 
 def sort_equation_system(system: EquationSystem,
                          map_variables: dict):
+    """
+    Role: sort the equation system based on the degree of the variables
+    Input:
+        - system: the input system
+        - map_variables: a dictionary of the new introduced variables to their expression, e.g. {w1: x1 ** 2}
+    """
     sorted_system = [0] * system.dimension
     degree_dict = {k: total_degree(v.as_poly())
                    for k, v in map_variables.items()}
@@ -422,6 +447,9 @@ def sort_equation_system(system: EquationSystem,
 
 
 def innerquadratic_representation(map_variables: dict):
+    """
+    Role: Since the input map_variables is inner-quadratic, therefore, we try to find the quadratic form of the variables, e.g. {g1: x1 ** 2, g2: x1 ** 3} => {g1: x1 ** 2, g2: x1 * g1}
+    """
     variable_to_quadratic_form = {}
     map_variables_inverse = {v: k for k, v in map_variables.items()}
     # the degree of variables is increasing
@@ -450,6 +478,9 @@ def innerquadratic_representation(map_variables: dict):
 
 def equilibrium_list_to_dict(system: EquationSystem,
                              equilibrium: list):
+    """
+    Role: This function match the list of equilibrium points to the dictionary of equilibrium points in order to use sympy.subs for computation, eg. [[0, 0], [1, 1]] for [x1, x2] => {x1: 0, x2: 0} and {x1: 1, x2: 1}
+    """
     equilibrium_dict = []
     n = system.dimension
     list_lhs = [lhs for lhs in system.dict_variables_equations.keys()]
@@ -467,6 +498,17 @@ def equilibrium_list_to_dict(system: EquationSystem,
 def dquadratization_multi_equilibrium(system: EquationSystem,
                                       equilibrium: list,
                                       display=True):
+    """
+    Algorithm 3 in the paper
+    Role: The algorithm take a input system and a list of equilibrium points, and compute the dissipative quadratization of the system with the equilibrium points
+    Input:
+        - system: the input system
+        - equilibrium: a list of equilibrium points, each equilibrium point is a list of values of the variables, e.g. [[0, 0], [1, 1]] for [x1, x2] => {x1: 0, x2: 0} and {x1: 1, x2: 1}
+    Output:
+        - lambda_value: the lambda value of the system
+        - substract_eq_system_with_lambda: the system after substracting the lambda value
+    The function will display the dissipaitve quadratizaiton system with the lambda value
+    """
     lambda_ = sp.symbols('lambda')
     if display:
         print("-------------------------- Compute a quadratization dissipative with multi given equilibrium --------------------------")
