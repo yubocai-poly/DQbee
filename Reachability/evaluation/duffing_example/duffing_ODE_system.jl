@@ -18,7 +18,7 @@ function duffing_system_carlin()
     F1 = zeros(3, 3)
     F1[1, 2] = 1
     F1[2, 1] = -1
-    F1[2, 2] = -2
+    F1[2, 2] = -1
     F1[3, 3] = -1
 
     F2 = zeros(3, 9) # [x, x⊗x]
@@ -67,32 +67,86 @@ end
 # ====================================================================
 
 # Ploting the results
-Tmax = 10.0
+Tmax = 20.0
 rr0 = 0.0
 
-sol_N4_no_error = _solve_system_carlin(N=4, T=Tmax, δ=0.01, radius0=rr0, bloat=false)
-sol_N4_error = _solve_system_carlin(N=4, T=Tmax, δ=0.01, radius0=[0.1, 0.1, 0.1], bloat=true)
+sol_N4_no_error = _solve_system_carlin(N=6, T=Tmax, δ=0.02, radius0=rr0, bloat=false)
+sol_N4_error = _solve_system_carlin(N=6, T=Tmax, δ=0.02, radius0=0, bloat=true)
 
 # figure with NO error bounds, plot for x
 function figure_System_NoError()
-  
-    fig = plot(legend=:topright, xlab = L"\textrm{Time t}", ylab = L"\textrm{x(t)} ",
-    legendfontsize=12,
-    tickfont=font(10, "Times"),
-    guidefontsize=10,
-    xguidefont=font(10, "Times"),
-    yguidefont=font(10, "Times"),
-    bottom_margin=5mm,
-    left_margin=5mm,
-    right_margin=5mm,
-    top_margin=5mm,
-    size=(800, 600))
-  
-    plot!(fig, sol_N4_no_error,  vars=(0, 1), color=:aquamarine, lc=:aquamarine, linewidth=2, linestyle=:dash, label=L"x'=-x+axy \textrm{, a=20.0, N=4, } \alpha=1.0")
-    
+
+    fig = plot(legend=:topright, 
+                xlab = L"\textrm{Time t}", 
+                ylab = L"\textrm{x(t)} ",
+                legendfontsize=12,
+                tickfont=font(14, "Times"),  
+                guidefontsize=14,  
+                xtick = 0:5:20,
+                xguidefont=font(14, "Times"),  
+                yguidefont=font(14, "Times"),  
+                bottom_margin=5mm,
+                left_margin=5mm,
+                right_margin=5mm,
+                top_margin=5mm,
+                size=(800, 600),
+                grid = true) 
+
+    plot!(fig, sol_N4_no_error,  
+          vars=(0, 1), 
+          color=:aquamarine, 
+          lc=:aquamarine, 
+          linewidth=3,
+          linestyle=:dash, 
+          label=L"x''=-x+x^{3}-x'")
+
     return fig
-                
+
 end
 
+
 fig = figure_System_NoError()
+savefig(fig, joinpath(TARGET_FOLDER, "figure_duffing_no_error.pdf"))
+display(fig)
+
+# figure with error bounds, plot for x
+function figure_System_withError()
+
+    fig = plot(legend=:topright, 
+                xlab = L"\textrm{Time t}", 
+                ylab = L"\textrm{x(t)} ",
+                legendfontsize=12,
+                tickfont=font(14, "Times"),  
+                guidefontsize=14,  
+                xguidefont=font(14, "Times"),  
+                yguidefont=font(14, "Times"),  
+                bottom_margin=5mm,
+                left_margin=5mm,
+                right_margin=5mm,
+                top_margin=5mm,
+                size=(800, 600),
+                grid = true) 
+
+    plot!(fig, sol_N4_error,  
+            vars=(0, 1), 
+            color=:orange, 
+            lc=:orange, 
+            linewidth=3,
+            linestyle=:dash, 
+            label=L"\text{error bounds, } N=6")
+
+    plot!(fig, sol_N4_no_error,  
+          vars=(0, 1), 
+          color=:aquamarine, 
+          lc=:aquamarine, 
+          linewidth=3,
+          linestyle=:dash, 
+          label=L"x''=-x+x^{3}-x'")
+
+    return fig
+
+end
+
+fig = figure_System_withError()
+savefig(fig, joinpath(TARGET_FOLDER, "figure_duffing_error.pdf"))
 display(fig)

@@ -48,3 +48,6 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+# ingore gr-temp folder
+Reachability/gr-temp/*

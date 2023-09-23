@@ -88,7 +88,6 @@ function _solve_CARLIN(X0, F1, F2; alg, N, T, Δt0=interval(0), A=nothing,
     end
 
     # compute errors
-    print(norm(X0, 2))
     errfunc = error_bound_func(X0, Matrix(F1), Matrix(F2), N=N)
 
     # evaluate error bounds for each reach-set in the solution
@@ -98,14 +97,10 @@ function _solve_CARLIN(X0, F1, F2; alg, N, T, Δt0=interval(0), A=nothing,
 
     # symmetrize intervals
     E_rad = [symmetric_interval_hull(Interval(ei)) for ei in E]
-    for ei in E_rad
-        println("ei = ", ei)
-    end
-    E_ball = [BallInf(zeros(n), max(ei)) for ei in E_rad]
+    E_ball = [BallInf(zeros(n), max(high(ei)...)) for ei in E_rad]
 
     # sum the solution with the error
     fp_bloated = [ReachSet(set(Ri) ⊕ Ei, tspan(Ri)) for (Ri, Ei) in zip(πsol_1n, E_ball)] |> Flowpipe
-    print("opertaed done")
 
     return ReachSolution(fp_bloated, alg)
 end
