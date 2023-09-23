@@ -554,14 +554,19 @@ def dquadratization_multi_equilibrium(system: EquationSystem,
 
     # compute the jacobian matrix of the system
     jacobian_matrix = sp.Matrix(rhs_for_jacobian).jacobian(lhs_list)
+    list_jacobian_subs_equilirbium = []
+    for equilibrium in list_of_equilibrium_dict:
+        list_jacobian_subs_equilirbium.append(
+            jacobian_matrix.subs(equilibrium))
+
 
     lambda_value = 1
     while True:
         # plug in the value
-        jacobian_matrix_value = jacobian_matrix.subs(lambda_, lambda_value)
         all_eigenvalues_negative = True
-        for equilibrium in list_of_equilibrium_dict:
-            jacobian_matrix_value = jacobian_matrix_value.subs(equilibrium)
+        for jacobian_subs_equilibrium in list_jacobian_subs_equilirbium:
+            jacobian_matrix_value = jacobian_subs_equilibrium.subs(
+                lambda_, lambda_value)
             eigenvalues = list(jacobian_matrix_value.eigenvals().keys())
             max_real_eigen = max(
                 [complex(eigenvalue).real for eigenvalue in eigenvalues])
