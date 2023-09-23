@@ -151,7 +151,7 @@ def optimal_inner_quadratization(system: EquationSystem, display=True):
         lhs = equation.lhs
         rhs = equation.rhs.as_poly(variables)
         new_lhs = None
-        new_rhs = rhs.as_expr()
+        new_rhs = 0
         # substitute the left hand side to make the degree is 1
         if lhs in monomial_2_quadra_copy:
             new_lhs = monomial_2_quadra_copy[lhs]
@@ -160,8 +160,10 @@ def optimal_inner_quadratization(system: EquationSystem, display=True):
             cleaned_term = reduce(
                 lambda x, y: x*y, [var ** exp for var, exp in zip(variables, key)])
             if degree_function(cleaned_term) > 2:
-                new_rhs = new_rhs.subs(
-                    cleaned_term, monomial_2_quadra[cleaned_term])
+                new_rhs += value * \
+                    monomial_2_quadra[cleaned_term]
+            else:
+                new_rhs += value * cleaned_term
 
         # Here we give the output of the substitution, that's why I use sp.Expr to make sure the output is a sympy expression
         # Yubo: Also, the substitution for sp.Poly is not stable, it occurs an error of not substituting the once when I run the code for ten times
@@ -477,7 +479,8 @@ def innerquadratic_representation(map_variables: dict):
 
 
 def equilibrium_list_to_dict(system: EquationSystem,
-                             equilibrium: list):
+                             equilibrium: list,
+                             map_variables: dict):
     """
     Role: This function match the list of equilibrium points to the dictionary of equilibrium points in order to use sympy.subs for computation, eg. [[0, 0], [1, 1]] for [x1, x2] => {x1: 0, x2: 0} and {x1: 1, x2: 1}
     """
@@ -491,6 +494,9 @@ def equilibrium_list_to_dict(system: EquationSystem,
                 'The dimension of the equilibrium point is not equal to the number of variables in the system, please check the input')
         for i in range(n):
             equilibria_dict[list_lhs[i]] = equilibria[i]
+        # add the new introduced variables to the equilibrium point
+        for key, value in map_variables.items():
+            equilibria_dict[key] = value.subs(equilibria_dict)
         equilibrium_dict.append(equilibria_dict)
     return equilibrium_dict
 
@@ -514,13 +520,13 @@ def dquadratization_multi_equilibrium(system: EquationSystem,
         print("-------------------------- Compute a quadratization dissipative with multi given equilibrium --------------------------")
         print("The original system is: ")
         display_or_print(system.show_system_latex())
-    list_of_equilibrium_dict = equilibrium_list_to_dict(
-        system, equilibrium)
 
     innerquadratic_system, map_variables = optimal_inner_quadratization(
         system, display=False)[1], optimal_inner_quadratization(system, display=False)[3]
     sorted_system, map_variables_expression = sort_equation_system(
         innerquadratic_system, map_variables)
+    list_of_equilibrium_dict = equilibrium_list_to_dict(
+        system, equilibrium, map_variables_expression)
     variable_to_quadratic_form = innerquadratic_representation(
         map_variables_expression)
 
@@ -548,15 +554,11 @@ def dquadratization_multi_equilibrium(system: EquationSystem,
 
     # compute the jacobian matrix of the system
     jacobian_matrix = sp.Matrix(rhs_for_jacobian).jacobian(lhs_list)
-    introduced_value_dict = {
-        variable: 0 for variable in map_variables_expression.keys()}
 
     lambda_value = 1
     while True:
         # plug in the value
         jacobian_matrix_value = jacobian_matrix.subs(lambda_, lambda_value)
-        jacobian_matrix_value = jacobian_matrix_value.subs(
-            introduced_value_dict)
         all_eigenvalues_negative = True
         for equilibrium in list_of_equilibrium_dict:
             jacobian_matrix_value = jacobian_matrix_value.subs(equilibrium)
@@ -567,6 +569,7 @@ def dquadratization_multi_equilibrium(system: EquationSystem,
                 # if the largest real part eigenvalue is not negative, then we need to increase the lambda value
                 all_eigenvalues_negative = False
                 lambda_value *= 2
+                print('The lambda value is ', lambda_value)
                 break
         if all_eigenvalues_negative:
             break
