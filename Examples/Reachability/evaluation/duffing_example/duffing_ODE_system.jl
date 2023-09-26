@@ -70,8 +70,8 @@ end
 Tmax = 20.0
 rr0 = 0.0
 
-sol_N6_no_error = _solve_system_carlin(N=6, T=Tmax, δ=0.02, radius0=rr0, bloat=false)
-sol_N6_error = _solve_system_carlin(N=6, T=Tmax, δ=0.02, radius0=0, bloat=true, resets=[4.0])
+sol_N6_no_error = _solve_system_carlin(N=6, T=Tmax, δ=0.01, radius0=rr0, bloat=false)
+sol_N6_error = _solve_system_carlin(N=6, T=Tmax, δ=0.01, radius0=0, bloat=true, resets=[4.0])
 
 # figure with NO error bounds, plot for x
 function figure_System_NoError()
@@ -79,12 +79,12 @@ function figure_System_NoError()
     fig = plot(legend=:topright, 
                 xlab = L"\textrm{Time t}", 
                 ylab = L"\textrm{x(t)} ",
-                legendfontsize=12,
-                tickfont=font(14, "Times"),  
-                guidefontsize=14,  
+                legendfontsize=16,
+                tickfont=font(16, "Times"),  
+                guidefontsize=16,  
                 xtick = 0:5:20,
-                xguidefont=font(14, "Times"),  
-                yguidefont=font(14, "Times"),  
+                xguidefont=font(16, "Times"),  
+                yguidefont=font(16, "Times"),  
                 bottom_margin=5mm,
                 left_margin=5mm,
                 right_margin=5mm,
@@ -96,7 +96,7 @@ function figure_System_NoError()
           vars=(0, 1), 
           color=:aquamarine, 
           lc=:aquamarine,
-          linewidth=3,
+          linewidth=5,
           linestyle=:dash, 
           label=L"x")
 
@@ -115,11 +115,11 @@ function figure_System_withError()
     fig = plot(legend=:topright, 
                 xlab = L"\textrm{Time t}", 
                 ylab = L"\textrm{x(t)} ",
-                legendfontsize=12,
-                tickfont=font(14, "Times"),  
-                guidefontsize=14,  
-                xguidefont=font(14, "Times"),  
-                yguidefont=font(14, "Times"),  
+                legendfontsize=16,
+                tickfont=font(16, "Times"),  
+                guidefontsize=16,  
+                xguidefont=font(16, "Times"),  
+                yguidefont=font(16, "Times"),  
                 bottom_margin=5mm,
                 left_margin=5mm,
                 right_margin=5mm,
@@ -131,17 +131,17 @@ function figure_System_withError()
             vars=(0, 1), 
             color=:orange, 
             lc=:orange,
-            linewidth=3,
+            linewidth=5,
             linestyle=:dash, 
-            label=L"\textrm{plot of } x \textrm{ with error bounds, } N=6")
+            label=L"\textrm{Error Bounds}")
 
     plot!(fig, sol_N6_no_error,  
           vars=(0, 1), 
           color=:aquamarine, 
           lc=:aquamarine, 
-          linewidth=3,
+          linewidth=5,
           linestyle=:dash, 
-          label=L"x''=-x+x^{3}-x'")
+          label=L"x")
 
     return fig
 
