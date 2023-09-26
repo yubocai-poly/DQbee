@@ -9,6 +9,7 @@ from sympy.core.relational import Equality
 from sympy import symbols, total_degree
 from IPython.display import Latex
 import sys
+from tbcontrol.symbolic import routh
 sys.path.append("..")
 
 
@@ -501,15 +502,94 @@ def equilibrium_list_to_dict(system: EquationSystem,
     return equilibrium_dict
 
 
+def aux_sympy_naive(list_jacobian_subs_equilirbium, lambda_):
+    lambda_value = 1
+    while True:
+        # plug in the value
+        all_eigenvalues_negative = True
+        for jacobian_subs_equilibrium in list_jacobian_subs_equilirbium:
+            jacobian_matrix_value = jacobian_subs_equilibrium.subs(
+                lambda_, lambda_value)
+            eigenvalues = list(jacobian_matrix_value.eigenvals().keys())
+            max_real_eigen = max(
+                [complex(eigenvalue).real for eigenvalue in eigenvalues])
+            if max_real_eigen >= 0:
+                # if the largest real part eigenvalue is not negative, then we need to increase the lambda value
+                all_eigenvalues_negative = False
+                lambda_value *= 2
+                break
+        if all_eigenvalues_negative:
+            break
+
+    return lambda_value
+
+
+def aux_numpy(list_jacobian_subs_equilirbium, lambda_):
+    # finish the computation with numpy
+    # first transform the sympy matrix to numpy matrix, contain the lambda symbol
+    # plug in the lambda value
+    # Create a numpy function for each jacobian matrix
+    numpy_jacobians = [sp.lambdify(lambda_, jacobian_matrix_value, 'numpy')
+                       for jacobian_matrix_value in list_jacobian_subs_equilirbium]
+
+    lambda_value = 1
+    while True:
+        # Plug in the lambda value
+        all_eigenvalues_negative = True
+        for numpy_jacobian in numpy_jacobians:
+            jacobian_matrix_value = numpy_jacobian(lambda_value)
+            eigenvalues = np.linalg.eigvals(jacobian_matrix_value)
+            max_real_eigen = max(eigenvalues.real)
+            if max_real_eigen >= 0:
+                # If the largest real part eigenvalue is not negative, then we need to increase the lambda value
+                all_eigenvalues_negative = False
+                lambda_value *= 2
+                break
+        if all_eigenvalues_negative:
+            break
+
+    return lambda_value
+
+
+def aux_routh_hurwitz(list_jacobian_subs_equilirbium, lambda_):
+    # finish the computation with Routh-Hurwitz criterion
+    # first transform the sympy matrix into characteristic polynomial
+    character_poly_list = [sp.Poly(jacobian_matrix_value.charpoly(
+        lambda_), lambda_) for jacobian_matrix_value in list_jacobian_subs_equilirbium]
+
+    # Convert sympy Polynomials to numpy
+    routh_arrays = [routh(p) for p in character_poly_list]
+
+    lambda_value = 1
+    while True:
+        # Plug in the lambda value
+        all_eigenvalues_negative = True
+        for routh_matrix in routh_arrays:
+            # plug in the lambda value and check whether the left hand column must have entries with all the same signs
+            _lambda = routh_matrix.free_symbols.pop()
+            routh_matrix_lambda = routh_matrix.subs(_lambda, lambda_value)
+            if not (np.all(np.sign(routh_matrix_lambda[:, 0]) > 0) or np.all(np.sign(routh_matrix_lambda[:, 0]) < 0)):
+                # If the largest real part eigenvalue is not negative, then we need to increase the lambda value
+                all_eigenvalues_negative = False
+                lambda_value *= 2
+                break
+        if all_eigenvalues_negative:
+            break
+
+    return lambda_value
+
+
 def dquadratization_multi_equilibrium(system: EquationSystem,
                                       equilibrium: list,
-                                      display=True):
+                                      display=True,
+                                      method='numpy'):
     """
     Algorithm 3 in the paper
     Role: The algorithm take a input system and a list of equilibrium points, and compute the dissipative quadratization of the system with the equilibrium points
     Input:
         - system: the input system
         - equilibrium: a list of equilibrium points, each equilibrium point is a list of values of the variables, e.g. [[0, 0], [1, 1]] for [x1, x2] => {x1: 0, x2: 0} and {x1: 1, x2: 1}
+        method: The default method is using numpy for computation, or with routh-hurwitz criterion and naiv_sympy
     Output:
         - lambda_value: the lambda value of the system
         - substract_eq_system_with_lambda: the system after substracting the lambda value
@@ -559,34 +639,25 @@ def dquadratization_multi_equilibrium(system: EquationSystem,
         list_jacobian_subs_equilirbium.append(
             jacobian_matrix.subs(equilibrium))
 
+    # three computation methods
+    if method == 'numpy':
+        lambda_value = aux_numpy(list_jacobian_subs_equilirbium, lambda_)
+    elif method == 'Routh-Hurwitz':
+        lambda_value = aux_routh_hurwitz(
+            list_jacobian_subs_equilirbium, lambda_)
+    elif method == 'sympy-naive':
+        lambda_value = aux_sympy_naive(list_jacobian_subs_equilirbium, lambda_)
+    else:
+        raise ValueError('Please enter a valid method name')
 
-    lambda_value = 1
-    while True:
-        # plug in the value
-        all_eigenvalues_negative = True
-        for jacobian_subs_equilibrium in list_jacobian_subs_equilirbium:
-            jacobian_matrix_value = jacobian_subs_equilibrium.subs(
-                lambda_, lambda_value)
-            eigenvalues = list(jacobian_matrix_value.eigenvals().keys())
-            max_real_eigen = max(
-                [complex(eigenvalue).real for eigenvalue in eigenvalues])
-            if max_real_eigen >= 0:
-                # if the largest real part eigenvalue is not negative, then we need to increase the lambda value
-                all_eigenvalues_negative = False
-                lambda_value *= 2
-                print('The lambda value is ', lambda_value)
-                break
-        if all_eigenvalues_negative:
-            break
-
+    substract_system_with_lambda = [sp.Eq(lhs, rhs.subs(
+        lambda_, lambda_value)) for lhs, rhs in zip(lhs_list, rhs_for_jacobian)]
+    substract_eq_system_with_lambda = EquationSystem(
+        substract_system_with_lambda)
     if display:
         print("-------------------------- The lambda value --------------------------")
         print('The lambda value is: ', lambda_value)
         print("-------------------------- The Dissipative quadratized system with lambda value --------------------------")
-        substract_system_with_lambda = [sp.Eq(lhs, rhs.subs(
-            lambda_, lambda_value)) for lhs, rhs in zip(lhs_list, rhs_for_jacobian)]
-        substract_eq_system_with_lambda = EquationSystem(
-            substract_system_with_lambda)
         display_or_print(substract_eq_system_with_lambda.show_system_latex())
         print("-------------------------- The Jacobian matrix --------------------------")
         display_or_print(Latex(rf"$$J={sp.latex(jacobian_matrix)}$$"))

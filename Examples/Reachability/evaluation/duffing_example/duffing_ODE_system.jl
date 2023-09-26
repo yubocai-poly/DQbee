@@ -70,8 +70,8 @@ end
 Tmax = 20.0
 rr0 = 0.0
 
-sol_N4_no_error = _solve_system_carlin(N=6, T=Tmax, δ=0.02, radius0=rr0, bloat=false)
-sol_N4_error = _solve_system_carlin(N=6, T=Tmax, δ=0.02, radius0=0, bloat=true)
+sol_N6_no_error = _solve_system_carlin(N=6, T=Tmax, δ=0.02, radius0=rr0, bloat=false)
+sol_N6_error = _solve_system_carlin(N=6, T=Tmax, δ=0.02, radius0=0, bloat=true, resets=[4.0])
 
 # figure with NO error bounds, plot for x
 function figure_System_NoError()
@@ -92,13 +92,13 @@ function figure_System_NoError()
                 size=(800, 600),
                 grid = true) 
 
-    plot!(fig, sol_N4_no_error,  
+    plot!(fig, sol_N6_no_error,  
           vars=(0, 1), 
           color=:aquamarine, 
-          lc=:aquamarine, 
+          lc=:aquamarine,
           linewidth=3,
           linestyle=:dash, 
-          label=L"x''=-x+x^{3}-x'")
+          label=L"x")
 
     return fig
 
@@ -127,15 +127,15 @@ function figure_System_withError()
                 size=(800, 600),
                 grid = true) 
 
-    plot!(fig, sol_N4_error,  
+    plot!(fig, sol_N6_error,  
             vars=(0, 1), 
             color=:orange, 
-            lc=:orange, 
+            lc=:orange,
             linewidth=3,
             linestyle=:dash, 
-            label=L"\text{error bounds, } N=6")
+            label=L"\textrm{plot of } x \textrm{ with error bounds, } N=6")
 
-    plot!(fig, sol_N4_no_error,  
+    plot!(fig, sol_N6_no_error,  
           vars=(0, 1), 
           color=:aquamarine, 
           lc=:aquamarine, 
