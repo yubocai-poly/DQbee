@@ -1,15 +1,13 @@
+import sys
+sys.path.append("..")
+import sympy as sp
+from Package.Simulation.numerical import *
+from Package.Combinations import *
+from Package.EquationSystem import *
+from Package.DQuadratization import *
 import pytest
 import math
-import sys
-import sympy as sp
 import time
-
-sys.path.append("..")
-
-from Package.DQuadratization import *
-from Package.EquationSystem import *
-from Package.Combinations import *
-from Package.Simulation.numerical import *
 
 
 # ---------------- Examples setting ----------------
@@ -101,3 +99,55 @@ def test_computing_time():
     result = optimal_inner_quadratization(eq_system_large_degree)
     end_time = time.time()
     assert (end_time - start_time) < 45
+
+
+# ---------------- Testing for Algorithm 2  ----------------
+duffing_system_1 = [
+    sp.Eq(x1, x2),
+    sp.Eq(x2, - x1 + x1 ** 3 - x2)
+]
+
+duffing_eq_system_1 = EquationSystem(duffing_system_1)
+
+
+def test_algorithm_2():
+    duffing_eq_system_1_one_equilibrium = dquadratization_one_equilibrium(
+        duffing_eq_system_1, {x1: 0, x2: 0}, display=True)
+    assert duffing_eq_system_1_one_equilibrium is not None
+
+
+# ---------------- Testing for Algorithm 3  ----------------
+# ---------------- Testing for larger dimension cases ----------------
+x = sp.Symbol('x')
+num_list = list(range(1, 8))
+
+rhs = - x
+for i in num_list:
+    rhs = rhs * (x - i)
+
+system = [sp.Eq(x, rhs)]
+multistable_eq_system = EquationSystem(system)
+
+rhs_differential = sp.diff(rhs, x, 1).expand()
+dissipative_equilibrium_list = []
+for i in range(1, 8):
+    if rhs_differential.subs(x, i) < 0:
+        dissipative_equilibrium_list.append([i])
+
+
+def test_algorithm_3_large_numpy():
+    dissipative_multi_system = dquadratization_multi_equilibrium(
+        multistable_eq_system, dissipative_equilibrium_list, method='numpy', display=False)
+    assert dissipative_multi_system[0] == 67108864 or dissipative_multi_system[0] == 134217728
+
+
+def test_algorithm_3_large_sympy():
+    dissipative_multi_system = dquadratization_multi_equilibrium(
+        multistable_eq_system, dissipative_equilibrium_list, method='sympy-naive', display=False)
+    assert dissipative_multi_system[0] == 67108864 or dissipative_multi_system[0] == 134217728
+
+
+def test_algorithm_3_large_Routh():
+    dissipative_multi_system = dquadratization_multi_equilibrium(
+        multistable_eq_system, dissipative_equilibrium_list, method='Routh-Hurwitz', display=False)
+    assert dissipative_multi_system[0] == 67108864 or dissipative_multi_system[0] == 134217728
