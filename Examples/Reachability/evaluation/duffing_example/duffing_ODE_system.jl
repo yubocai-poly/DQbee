@@ -70,44 +70,43 @@ end
 Tmax = 20.0
 rr0 = 0.0
 
-sol_N6_no_error = _solve_system_carlin(N=6, T=Tmax, δ=0.01, radius0=rr0, bloat=false)
-sol_N6_error = _solve_system_carlin(N=6, T=Tmax, δ=0.01, radius0=0, bloat=true, resets=[4.0])
+sol_N6_no_error = _solve_system_carlin(N=5, T=Tmax, δ=0.01, radius0=rr0, bloat=false)
+sol_N6_error = _solve_system_carlin(N=5, T=Tmax, δ=0.01, radius0=0, bloat=true)
 
-# figure with NO error bounds, plot for x
-function figure_System_NoError()
+# # figure with NO error bounds, plot for x
+# function figure_System_NoError()
 
-    fig = plot(legend=:topright, 
-                xlab = L"\textrm{Time t}", 
-                ylab = L"\textrm{x(t)} ",
-                legendfontsize=16,
-                tickfont=font(16, "Times"),  
-                guidefontsize=16,  
-                xtick = 0:5:20,
-                xguidefont=font(16, "Times"),  
-                yguidefont=font(16, "Times"),  
-                bottom_margin=5mm,
-                left_margin=5mm,
-                right_margin=5mm,
-                top_margin=5mm,
-                size=(800, 600),
-                grid = true) 
+#     fig = plot(legend=:topright, 
+#                 xlab = L"\textrm{Time t}", 
+#                 ylab = L"\textrm{x(t)} ",
+#                 legendfontsize=16,
+#                 tickfont=font(16, "Times"),  
+#                 guidefontsize=16,  
+#                 xtick = 0:5:20,
+#                 xguidefont=font(16, "Times"),  
+#                 yguidefont=font(16, "Times"),  
+#                 bottom_margin=5mm,
+#                 left_margin=5mm,
+#                 right_margin=5mm,
+#                 top_margin=5mm,
+#                 size=(800, 600),
+#                 grid = true) 
 
-    plot!(fig, sol_N6_no_error,  
-          vars=(0, 1), 
-          color=:aquamarine, 
-          lc=:aquamarine,
-          linewidth=5,
-          linestyle=:dash, 
-          label=L"x")
+#     plot!(fig, sol_N6_no_error,  
+#           vars=(0, 1), 
+#           color=:aquamarine, 
+#           linewidth=5,
+#           linestyle=:dash, 
+#           label=L"x")
 
-    return fig
+#     return fig
 
-end
+# end
 
 
-fig = figure_System_NoError()
-savefig(fig, joinpath(TARGET_FOLDER, "figure_duffing_no_error.pdf"))
-display(fig)
+# fig = figure_System_NoError()
+# savefig(fig, joinpath(TARGET_FOLDER, "figure_duffing_no_error.pdf"))
+# display(fig)
 
 # figure with error bounds, plot for x
 function figure_System_withError()
@@ -115,33 +114,27 @@ function figure_System_withError()
     fig = plot(legend=:topright, 
                 xlab = L"\textrm{Time t}", 
                 ylab = L"\textrm{x(t)} ",
-                legendfontsize=16,
-                tickfont=font(16, "Times"),  
-                guidefontsize=16,  
-                xguidefont=font(16, "Times"),  
-                yguidefont=font(16, "Times"),  
+                legendfontsize=25,
+                tickfont=font(15, "Times"),  
+                guidefontsize=15,  
+                xguidefont=font(20, "Times"),  
+                yguidefont=font(20, "Times"),
                 bottom_margin=5mm,
                 left_margin=5mm,
                 right_margin=5mm,
                 top_margin=5mm,
-                size=(800, 600),
+                size=(900, 500),
                 grid = true) 
 
     plot!(fig, sol_N6_error,  
             vars=(0, 1), 
-            color=:orange, 
-            lc=:orange,
-            linewidth=5,
-            linestyle=:dash, 
-            label=L"\textrm{Error Bounds}")
+            color=:lightblue, lc=:lightblue, linewidth=2,
+            label=L"err(x)\ (N=5)")
 
     plot!(fig, sol_N6_no_error,  
           vars=(0, 1), 
-          color=:aquamarine, 
-          lc=:aquamarine, 
-          linewidth=5,
-          linestyle=:dash, 
-          label=L"x")
+          color=:grey, lc=:grey, linewidth=2,
+          label=L"x\ (N=5)")
 
     return fig
 
