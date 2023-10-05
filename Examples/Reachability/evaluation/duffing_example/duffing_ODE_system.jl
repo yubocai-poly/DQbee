@@ -71,7 +71,7 @@ Tmax = 20.0
 rr0 = 0.0
 
 sol_N6_no_error = _solve_system_carlin(N=5, T=Tmax, δ=0.01, radius0=rr0, bloat=false)
-sol_N6_error = _solve_system_carlin(N=5, T=Tmax, δ=0.01, radius0=0, bloat=true)
+sol_N6_error = _solve_system_carlin(N=5, T=Tmax, δ=0.01, radius0=0, bloat=true, resets=[4.0])
 
 # # figure with NO error bounds, plot for x
 # function figure_System_NoError()

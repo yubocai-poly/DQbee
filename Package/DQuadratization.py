@@ -538,6 +538,8 @@ def aux_numpy(list_jacobian_subs_equilirbium, lambda_):
         all_eigenvalues_negative = True
         for numpy_jacobian in numpy_jacobians:
             jacobian_matrix_value = numpy_jacobian(lambda_value)
+            print(lambda_value)
+            print(jacobian_matrix_value)
             eigenvalues = np.linalg.eigvals(jacobian_matrix_value)
             max_real_eigen = max(eigenvalues.real)
             if max_real_eigen >= 0:
