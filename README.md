@@ -27,7 +27,7 @@ Here we call the number $m$ as the **order of quadratization**. The **optimal qu
 
 <kbd>Definition 2 (Equilibrium).</kbd> For a polynomial ODE system (1), a point $\mathbf{x}^* \in$ $\mathbb{R}^n$ is called an equilibrium if $\mathbf{p}\left(\mathbf{x}^*\right)=0$.
 
-<kbd>Definition 3 (Dissipativity).</kbd> An ODE system (1) is called dissipative at an equilibrium point $\mathbf{x}^{*}$ if all the eigenvalues of the Jacobian $J(\mathbf{p})|_{\mathbf{x}=\mathbf{x}^{*}}$ of $\mathbf{p}$ and $\mathbf{x}^*$ have negative real part.
+<kbd>Definition 3 (Dissipativity).</kbd> An ODE system (1) is called dissipative at an equilibrium point $\mathbf{x}^*$ if all the eigenvalues of the Jacobian $J(\mathbf{p})|_{\mathbf{x}=\mathbf{x}^*}$ of $\mathbf{p}$ and $\mathbf{x}^*$ have negative real part.
 
 <kbd>Definition 4 (Dissipative quadratization).</kbd> Assume that a system (1) is dissipative at an equilibrium point $\mathbf{x}^* \in \mathbb{R}^n$. Then a quadratization given by $\mathbf{g}, \mathbf{q}_1$ and $\mathbf{q}_2$ is called dissipative at $\mathbf{x}^*$ if the system
 
@@ -35,6 +35,6 @@ $$
 \mathbf{x}^{\prime}=\mathbf{q}_1(\mathbf{x}, \mathbf{y}), \quad \mathbf{y}^{\prime}=\mathbf{q}_2(\mathbf{x}, \mathbf{y})
 $$
 
-is dissipative at a point $\left(\mathbf{x}^*, \mathbf{g}\left(\mathbf{x}^*\right)\right)$.
+is dissipative at a point $(\mathbf{x}^*, \mathbf{g}(\mathbf{x}^*))$.
 
 ## 2. Package Description
