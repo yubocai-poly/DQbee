@@ -38,3 +38,14 @@ $$
 is dissipative at a point $\left(\mathbf{x}^\ast, \mathbf{g}\left(\mathbf{x}^\ast\right)\right)$.
 
 ## 2. Package Description
+This python package is mainly used to compute the inner-quadratic quadratization and dissipative quadratization of multivariate high-dimensional polynomial ODE system. This algorithm also has tools to perform reachability analysis of the system. Here are some of the specific features of this package:
+
+- Compute the inner-quadratic quadratization of polynomial ODE system.
+- Compute the dissipative quadratization of polynomial ODE system at origin.
+- Compute the dissipative quadratization of polynomial ODE system at an equilibrium point (input by the user), or at multiple equilibrium points (input by the user) with method `numpy`, `sympy`, or `Routh-Huritwz criterion`.
+- Compute the weakly nonlinearity bound $\left| \mathcal{X_{0}} \right|$ of dissipative system.
+
+## 3. Package Usage
+We will demonstrate usage of Package on the example below. Other interactive examples you can find more in our [example notebook]().
+
+### 3.1. Importing the Package

@@ -503,7 +503,7 @@ def equilibrium_list_to_dict(system: EquationSystem,
 
 
 def aux_sympy_naive(list_jacobian_subs_equilirbium, lambda_):
-    lambda_value = 1
+    lambda_value = 0
     while True:
         # plug in the value
         all_eigenvalues_negative = True
@@ -516,7 +516,10 @@ def aux_sympy_naive(list_jacobian_subs_equilirbium, lambda_):
             if max_real_eigen >= 0:
                 # if the largest real part eigenvalue is not negative, then we need to increase the lambda value
                 all_eigenvalues_negative = False
-                lambda_value *= 2
+                if lambda_value == 0:
+                    lambda_value = 1
+                else:
+                    lambda_value *= 2
                 break
         if all_eigenvalues_negative:
             break
@@ -532,20 +535,21 @@ def aux_numpy(list_jacobian_subs_equilirbium, lambda_):
     numpy_jacobians = [sp.lambdify(lambda_, jacobian_matrix_value, 'numpy')
                        for jacobian_matrix_value in list_jacobian_subs_equilirbium]
 
-    lambda_value = 1
+    lambda_value = 0
     while True:
         # Plug in the lambda value
         all_eigenvalues_negative = True
         for numpy_jacobian in numpy_jacobians:
             jacobian_matrix_value = numpy_jacobian(lambda_value)
-            print(lambda_value)
-            print(jacobian_matrix_value)
             eigenvalues = np.linalg.eigvals(jacobian_matrix_value)
             max_real_eigen = max(eigenvalues.real)
             if max_real_eigen >= 0:
                 # If the largest real part eigenvalue is not negative, then we need to increase the lambda value
                 all_eigenvalues_negative = False
-                lambda_value *= 2
+                if lambda_value == 0:
+                    lambda_value = 1
+                else:
+                    lambda_value *= 2
                 break
         if all_eigenvalues_negative:
             break
@@ -562,7 +566,7 @@ def aux_routh_hurwitz(list_jacobian_subs_equilirbium, lambda_):
     # Convert sympy Polynomials to numpy
     routh_arrays = [routh(p) for p in character_poly_list]
 
-    lambda_value = 1
+    lambda_value = 0
     while True:
         # Plug in the lambda value
         all_eigenvalues_negative = True
@@ -573,7 +577,11 @@ def aux_routh_hurwitz(list_jacobian_subs_equilirbium, lambda_):
             if not (np.all(np.sign(routh_matrix_lambda[:, 0]) > 0) or np.all(np.sign(routh_matrix_lambda[:, 0]) < 0)):
                 # If the largest real part eigenvalue is not negative, then we need to increase the lambda value
                 all_eigenvalues_negative = False
-                lambda_value *= 2
+                print(lambda_value)
+                if lambda_value == 0:
+                    lambda_value = 1
+                else:
+                    lambda_value *= 2
                 break
         if all_eigenvalues_negative:
             break
