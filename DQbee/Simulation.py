@@ -1,8 +1,9 @@
+import sys
 import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
-from ..EquationSystem import *
-from ..DQuadratization import *
+from EquationSystem import *
+from DQuadratization import *
 from typing import Optional, List, Dict
 from sympy import lambdify
 from scipy.integrate import solve_ivp

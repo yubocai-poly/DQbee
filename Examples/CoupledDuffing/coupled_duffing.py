@@ -1,12 +1,8 @@
-import sys
-import time
-sys.path.append("../../")
 import pandas as pd
 import sympy as sp
-from Package.Combinations import *
-from Package.EquationSystem import *
-from Package.DQuadratization import *
-
+from DQbee.DQuadratization import *
+from DQbee.EquationSystem import *
+import time
 
 # Defining the coupling and dumping parameters
 def A_entry(i, j):

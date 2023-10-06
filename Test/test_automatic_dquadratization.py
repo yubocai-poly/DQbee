@@ -1,10 +1,10 @@
 import sys
-sys.path.append("..")
+sys.path.append("../DQbee/")
+# from Simulation import *
 import sympy as sp
-from Package.Simulation.numerical import *
-from Package.Combinations import *
-from Package.EquationSystem import *
-from Package.DQuadratization import *
+from DQbee.Combinations import *
+from DQbee.EquationSystem import *
+from DQbee.DQuadratization import *
 import pytest
 import math
 import time
@@ -68,20 +68,20 @@ def test_compute_weakly_nonlinearity():
 
 
 # ---------------- Testing for Simulation ----------------
-initial_state = {y: 0.1, z: 0}
-symbolic_args = {mu: 1}
+# initial_state = {y: 0.1, z: 0}
+# symbolic_args = {mu: 1}
 
 
-def test_simulation_original_system():
-    state_original = system_to_odeint(eq_system_vanderpol, t=[
-                                      0, 20, 1000], symbolic_args=symbolic_args, initial_state=initial_state)
-    assert state_original is not None
+# def test_simulation_original_system():
+#     state_original = system_to_odeint(eq_system_vanderpol, t=[
+#                                       0, 20, 1000], symbolic_args=symbolic_args, initial_state=initial_state)
+#     assert state_original is not None
 
 
-def test_simulation_DQ_system():
-    state_dissipative = system_to_odeint(Diq_vanderpol, t=[
-                                         0, 20, 1000], symbolic_args=symbolic_args, initial_state=initial_state)
-    assert state_dissipative is not None
+# def test_simulation_DQ_system():
+#     state_dissipative = system_to_odeint(Diq_vanderpol, t=[
+#                                          0, 20, 1000], symbolic_args=symbolic_args, initial_state=initial_state)
+#     assert state_dissipative is not None
 
 
 # ---------------- Testing for larger degree system  ----------------

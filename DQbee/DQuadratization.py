@@ -1,16 +1,15 @@
+import sys
+from tbcontrol.symbolic import routh
 import copy
 import numpy as np
 import sympy as sp
-from Package.EquationSystem import *
-from Package.Combinations import *
+from EquationSystem import *
+from Combinations import *
 from functools import reduce
 from sympy import symbols, diff, expand
 from sympy.core.relational import Equality
 from sympy import symbols, total_degree
 from IPython.display import Latex
-import sys
-from tbcontrol.symbolic import routh
-sys.path.append("..")
 
 
 def display_or_print(data):
@@ -577,7 +576,6 @@ def aux_routh_hurwitz(list_jacobian_subs_equilirbium, lambda_):
             if not (np.all(np.sign(routh_matrix_lambda[:, 0]) > 0) or np.all(np.sign(routh_matrix_lambda[:, 0]) < 0)):
                 # If the largest real part eigenvalue is not negative, then we need to increase the lambda value
                 all_eigenvalues_negative = False
-                print(lambda_value)
                 if lambda_value == 0:
                     lambda_value = 1
                 else:

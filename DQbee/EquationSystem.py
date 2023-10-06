@@ -1,16 +1,15 @@
+import sys
 from collections import Counter
 from IPython.display import Latex
-import Package.Combinations as comb
-from Package.Combinations import *
-import Package.AST_walk as ast
+import Combinations as comb
+from Combinations import *
+import AST_walk as ast
 from typing import List, Iterable
 from functools import reduce
 import copy
 import sympy as sp
 from sympy import symbols, diff, expand
 from sympy.core.relational import Equality
-import sys
-sys.path.append("..")
 
 
 class EquationSystem:
