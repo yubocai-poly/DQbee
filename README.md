@@ -1,4 +1,11 @@
-# Dissipative-Quadratiation-Package
+# DQbee
+
+`DQbee` is a python package for computing the dissipative quadratization of polynomial ODE system. 
+
+### Installation
+```bash
+pip install DQbee
+```
 
 ## 1. Introduction to the Problem
 
@@ -49,3 +56,8 @@ This python package is mainly used to compute the inner-quadratic quadratization
 We will demonstrate usage of Package on the example below. Other interactive examples you can find more in our [example notebook]().
 
 ### 3.1. Importing the Package
+```python
+import sympy as sp
+from DQbee.EquationSystem import *
+from DQbee.DQuadratization import *
+```
