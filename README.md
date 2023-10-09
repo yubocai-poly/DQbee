@@ -116,9 +116,16 @@ $$
 \left(x_1\right)^{\prime}=x_2 \\
 \left(x_2\right)^{\prime}=a x_1^3+b x_2+k x_1 \\
 \left(x_1^2\right)^{\prime}=2 x_1 x_2
-\end{array}\right. \xRightarrow{x_1^2 = w_1} 
+\end{array}\right. 
+
+\xRightarrow{x_1^2 = w_1} 
 \text{sub\_oiq\_system: }
-\begin{cases}\left(x_1\right)^{\prime} & =x_2 \\ \left(x_2\right)^{\prime} & =a w_1 x_1+b x_2+k x_1 \\ \left(w_1\right)^{\prime} & =2 x_1 x_2\end{cases}
+
+\begin{cases}
+\left(x_1\right)^{\prime} & =x_2 \\ 
+\left(x_2\right)^{\prime} & =a w_1 x_1+b x_2+k x_1 \\ 
+\left(w_1\right)^{\prime} & =2 x_1 x_2
+\end{cases}
 $$
 
 where `map_variables` is the map from the original variables to the new variables. In this case, we have $w_{1}=x_{1}^{2}$. With all the information above, we can compute the dissipative quadratization of the system at origin as follows:
@@ -133,11 +140,49 @@ dissipative_result = optimal_dissipative_quadratization(eq_system,
 The function will transfer all the linear terms in the ODE of introduced variables into quadratic terms, and keep negative linear terms in order to have a dissipative system *(by keep all diagonal terms of the matrix associated to linear part negative )*. If the `input_diagonal` is None, then the function will choose the largest eigenvalue of orginal system as the diagonal value. In our case, the output is as follows:
 
 $$
-\begin{cases}\left(x_1\right)^{\prime} & =x_2 \\ \left(x_2\right)^{\prime} & =a w_1 x_1+b x_2+k x_1 \\ \left(w_1\right)^{\prime} & =w_1\left(\frac{b}{2}-\frac{\sqrt{b^2+4 k}}{2}\right)-x_1^2\left(\frac{b}{2}-\frac{\sqrt{b^2+4 k}}{2}\right)+2 x_1 x_2\end{cases}
+\begin{cases}
+\left(x_1\right)^{\prime} & =x_2 \\ 
+\left(x_2\right)^{\prime} & =a w_1 x_1+b x_2+k x_1 \\ 
+\left(w_1\right)^{\prime} & =w_1\left(\frac{b}{2}-\frac{\sqrt{b^2+4 k}}{2}\right)-x_1^2\left(\frac{b}{2}-\frac{\sqrt{b^2+4 k}}{2}\right)+2 x_1 x_2
+\end{cases}
+
 \xRightarrow{\text{matrix associated to linear part}} 
+
 \left[\begin{array}{ccc}
 0 & 1 & 0 \\
 k & b & 0 \\
 0 & 0 & \frac{b}{2}-\frac{\sqrt{b^2+4 k}}{2}
 \end{array}\right]
 $$
+
+We take another example to show how to compute the dissipative quadratization with multiple given equilibrium point. We take the following system as an example:
+
+$$
+x' = -x (x - 1) (x - 2)
+$$
+
+where $a$ is positive. The system has three equilibrium points: $x_1 = 0, x_2 = 1, x_3 = 2$ but only dissipative at $x_1 = 0, 2$. We can define the system as follows:
+```py
+multistable_eq_system = EquationSystem([sp.Eq(x, - x * (x - 1) * (x - 2))])
+```
+Then we can compute the dissipative quadratization of the system at multiple equilibrium points as follows:
+```py
+result = dquadratization_multi_equilibrium(multistable_eq_system, 
+                                           equilibrium = [[0],[2]],
+                                           display=True,
+                                           method='numpy' # or 'sympy' or 'Routh-Hurwitz'
+                                        )
+```
+which will return the $\lambda$ and the dissipative quadratization of the system which make all the equilibrium points dissipative. In this case, the output is as follows:
+
+$$
+\left\{\begin{array}{l}
+(x)^{\prime}=-g_1 x+3 x^2-2 x \\
+\left(g_1\right)^{\prime}=-2 g_1^2+6 g_1 x-8 g_1+4 x^2
+\end{array}\right.
+$$
+
+In this function, we provide three methods to compute the dissipative quadratization of the system at multiple equilibrium points:
+- `numpy`: use `numpy.linalg.eigvals` to compute the eigenvalues of the Jacobian matrix of the system at equilibrium points, which is the fastest method.
+- `sympy`: use `sympy.Matrix.eigenvals` to compute the eigenvalues of the Jacobian matrix of the system at equilibrium points.
+- `Routh-Hurwitz`: use Routh-Hurwitz criterion to justify the stability of the system at equilibrium points.
