@@ -111,11 +111,11 @@ map_variables = inner_result[3]
 Here, we will explain with these outputs. We show transformation from `oiq_system` to `sub_oiq_system` by substitution of variables:
 
 $$
-\left\{\begin{array}{l}
+\begin{cases}
 \left(x_1\right)^{\prime}=x_2 \\
 \left(x_2\right)^{\prime}=a x_1^3+b x_2+k x_1 \\
 \left(x_1^2\right)^{\prime}=2 x_1 x_2
-\end{array}\right. 
+\end{cases}
 \xRightarrow{x_1^2 = w_1} 
 \begin{cases}
 \left(x_1\right)^{\prime} & =x_2 \\ 
