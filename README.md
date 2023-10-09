@@ -108,17 +108,15 @@ sub_oiq_system = inner_result[1]
 monomial_to_quadratic_form = inner_result[2] # This is only used for optimal_dissipative_quadratization` function
 map_variables = inner_result[3]
 ```
-Here, we will explain with these outputs.
+Here, we will explain with these outputs. We show transformation from `oiq_system` to `sub_oiq_system` by substitution of variables:
 
 $$
-\text{oiq\_system: }
 \left\{\begin{array}{l}
 \left(x_1\right)^{\prime}=x_2 \\
 \left(x_2\right)^{\prime}=a x_1^3+b x_2+k x_1 \\
 \left(x_1^2\right)^{\prime}=2 x_1 x_2
 \end{array}\right. 
 \xRightarrow{x_1^2 = w_1} 
-\text{sub\_oiq\_system: }
 \begin{cases}
 \left(x_1\right)^{\prime} & =x_2 \\ 
 \left(x_2\right)^{\prime} & =a w_1 x_1+b x_2+k x_1 \\ 
