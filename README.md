@@ -53,7 +53,7 @@ This python package is mainly used to compute the inner-quadratic quadratization
 - Compute the weakly nonlinearity bound $\left| \mathcal{X_{0}} \right|$ of dissipative system.
 
 ## 3. Package Usage
-We will demonstrate usage of Package on the example below. Other interactive examples you can find more in our [example notebook]().
+We will demonstrate usage of Package on the example below. Other interactive examples you can find more in our [[example file]](https://github.com/yubocai-poly/DQbee/tree/main/Examples). **We recommend to run the package in IPython environment or Jupyter notebook in order to see the result display with $\LaTeX$**.
 
 ### 3.1. Importing the Package
 ```python
@@ -61,3 +61,83 @@ import sympy as sp
 from DQbee.EquationSystem import *
 from DQbee.DQuadratization import *
 ```
+
+### 3.2. Polynomial ODE System Setting
+We take the following duffing equation as an example:
+
+$$
+x'' = kx + ax^{3} + bx'
+$$
+
+which described damped oscillator with non-linear restoring force. The equation can be written as a first-order system by introducing $x_1 := x, x_2 := x'$ as follows
+
+$$
+\begin{cases}
+    x_1' = x_2,\\
+    x_2' = kx_1 + a x_1^3 + b x_2.
+\end{cases}
+$$
+
+We can define the system as follows:
+```python
+x1, x2 = sp.symbols('x1 x2')
+k, a, b = sp.symbols('k a b')
+
+system = [
+    sp.Eq(x1, x2),
+    sp.Eq(x2, k*x1 + a*x1**3 + b*x2)
+]
+
+eq_system = EquationSystem(system) # This step transform the system into `EquationSystem` object
+display_or_print(eq_system.show_system_latex()) # Display the system in latex format, inner method of `EquationSystem` object
+```
+
+### 3.3. Quadratization
+In our package, we provide several quadratization functions to the `EquationSystem` object:
+- `optimal_inner_quadratization`: compute the inner-quadratic quadratization of a given polynomial ODE system. *(Implementation of Algorithm 1 in the paper)*
+- `optimal_dissipative_quadratization`: transform an inner-quadratic system into dissipative quadratization at origin, where the user can choose the value of the coefficients of the linear terms in order to make the system dissipative.
+- `dquadratization_one_equilibrium`: compute the dissipative quadratization of a given polynomial ODE system at a given equilibrium point.
+- `dquadratization_multi_equilibrium`: compute the dissipative quadratization of a given polynomial ODE system at multiple equilibrium points. *(Implementation of Algorithm 2 in the paper)*
+
+```py
+inner_result = optimal_inner_quadratization(eq_system,
+                                            display=False) # Set `display` to True if you want to display the result
+# Output:
+oiq_system = inner_result[0]
+sub_oiq_system = inner_result[1]
+monomial_to_quadratic_form = inner_result[2] # This is only used for optimal_dissipative_quadratization` function
+map_variables = inner_result[3]
+```
+Here, we will explain with these outputs.
+
+$$
+\text{oiq\_system: }
+\left\{\begin{array}{l}
+\left(x_1\right)^{\prime}=x_2 \\
+\left(x_2\right)^{\prime}=a x_1^3+b x_2+k x_1 \\
+\left(x_1^2\right)^{\prime}=2 x_1 x_2
+\end{array}\right. \xRightarrow{x_1^2 = w_1} 
+\text{sub\_oiq\_system: }
+\begin{cases}\left(x_1\right)^{\prime} & =x_2 \\ \left(x_2\right)^{\prime} & =a w_1 x_1+b x_2+k x_1 \\ \left(w_1\right)^{\prime} & =2 x_1 x_2\end{cases}
+$$
+
+where `map_variables` is the map from the original variables to the new variables. In this case, we have $w_{1}=x_{1}^{2}$. With all the information above, we can compute the dissipative quadratization of the system at origin as follows:
+```py
+dissipative_result = optimal_dissipative_quadratization(eq_system,
+                                                        sub_oiq_system,
+                                                        monomial_to_quadratic_form,
+                                                        map_variables,
+                                                        Input_diagonal=None, # the coefficients of the linear terms
+                                                        display=False) 
+```
+The function will transfer all the linear terms in the ODE of introduced variables into quadratic terms, and keep negative linear terms in order to have a dissipative system *(by keep all diagonal terms of the matrix associated to linear part negative )*. If the `input_diagonal` is None, then the function will choose the largest eigenvalue of orginal system as the diagonal value. In our case, the output is as follows:
+
+$$
+\begin{cases}\left(x_1\right)^{\prime} & =x_2 \\ \left(x_2\right)^{\prime} & =a w_1 x_1+b x_2+k x_1 \\ \left(w_1\right)^{\prime} & =w_1\left(\frac{b}{2}-\frac{\sqrt{b^2+4 k}}{2}\right)-x_1^2\left(\frac{b}{2}-\frac{\sqrt{b^2+4 k}}{2}\right)+2 x_1 x_2\end{cases}
+\xRightarrow{\text{matrix associated to linear part}} 
+\left[\begin{array}{ccc}
+0 & 1 & 0 \\
+k & b & 0 \\
+0 & 0 & \frac{b}{2}-\frac{\sqrt{b^2+4 k}}{2}
+\end{array}\right]
+$$
