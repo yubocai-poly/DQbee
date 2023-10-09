@@ -117,10 +117,8 @@ $$
 \left(x_2\right)^{\prime}=a x_1^3+b x_2+k x_1 \\
 \left(x_1^2\right)^{\prime}=2 x_1 x_2
 \end{array}\right. 
-
 \xRightarrow{x_1^2 = w_1} 
 \text{sub\_oiq\_system: }
-
 \begin{cases}
 \left(x_1\right)^{\prime} & =x_2 \\ 
 \left(x_2\right)^{\prime} & =a w_1 x_1+b x_2+k x_1 \\ 
@@ -145,9 +143,7 @@ $$
 \left(x_2\right)^{\prime} & =a w_1 x_1+b x_2+k x_1 \\ 
 \left(w_1\right)^{\prime} & =w_1\left(\frac{b}{2}-\frac{\sqrt{b^2+4 k}}{2}\right)-x_1^2\left(\frac{b}{2}-\frac{\sqrt{b^2+4 k}}{2}\right)+2 x_1 x_2
 \end{cases}
-
 \xRightarrow{\text{matrix associated to linear part}} 
-
 \left[\begin{array}{ccc}
 0 & 1 & 0 \\
 k & b & 0 \\
@@ -186,3 +182,18 @@ In this function, we provide three methods to compute the dissipative quadratiza
 - `numpy`: use `numpy.linalg.eigvals` to compute the eigenvalues of the Jacobian matrix of the system at equilibrium points, which is the fastest method.
 - `sympy`: use `sympy.Matrix.eigenvals` to compute the eigenvalues of the Jacobian matrix of the system at equilibrium points.
 - `Routh-Hurwitz`: use Routh-Hurwitz criterion to justify the stability of the system at equilibrium points.
+
+## 4. Artifact Evaluation
+We provide the artifact evaluation for the paper. We list the code resourses and the corresponding results in the following list:
+- Figure 1 in Example 2 in the paper: [[Jupyter Notebook]](https://github.com/yubocai-poly/DQbee/blob/main/Examples/simulation_unstable.ipynb).
+
+- Implementation of Algorithm 1 in the paper: [[code]](https://github.com/yubocai-poly/DQbee/blob/main/DQbee/DQuadratization.py#L88).
+
+- Implementation of Algorithm 2 in the paper: [[code]](https://github.com/yubocai-poly/DQbee/blob/main/DQbee/DQuadratization.py#L591).
+
+- Example 5 in the paper: [[Jupyter Notebook]](https://github.com/yubocai-poly/DQbee/blob/main/Examples/MultiStability/multistability_system_2.ipynb).
+
+- Section 5.1 - Application to reachability analysis: [[Julia Code]](https://github.com/yubocai-poly/DQbee/tree/main/Examples/Reachability). Plots of the results are shown in the file [[results]](https://github.com/yubocai-poly/DQbee/tree/main/Examples/Reachability/results). In order to execute the program of the reachability analysis, please run the [[start.ipynb]](https://github.com/yubocai-poly/DQbee/blob/main/Examples/Reachability/startup.ipynb).
+
+- Section 5.2 - Small bistable model: resource is shown in the file [[Bistability]](https://github.com/yubocai-poly/DQbee/tree/main/Examples/BiStability).
+- Section 5.3 - Coupled Duffing oscillators: [[Python Code]](https://github.com/yubocai-poly/DQbee/blob/main/Examples/CoupledDuffing/coupled_duffing.py).
