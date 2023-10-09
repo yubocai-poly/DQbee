@@ -1,10 +1,11 @@
 import sys
+sys.path.append('../')
 from tbcontrol.symbolic import routh
 import copy
 import numpy as np
 import sympy as sp
-from EquationSystem import *
-from Combinations import *
+from DQbee.EquationSystem import *
+from DQbee.Combinations import *
 from functools import reduce
 from sympy import symbols, diff, expand
 from sympy.core.relational import Equality
