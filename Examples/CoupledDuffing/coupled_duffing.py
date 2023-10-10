@@ -1,8 +1,12 @@
-import pandas as pd
-import sympy as sp
 from DQbee.DQuadratization import *
 from DQbee.EquationSystem import *
+from DQbee.Combinations import *
+import sympy as sp
+import pandas as pd
+import sys
 import time
+sys.path.append("../../")
+
 
 # Defining the coupling and dumping parameters
 def A_entry(i, j):
@@ -85,7 +89,22 @@ def main():
                         dissipative_time[0], dissipative_time[1], lambda_value])
 
     df = pd.DataFrame(results, columns=[
-        "N","Number of new vars", "Time (inner-quadratic)", "Time (dissipative)", "Method", "Lambda"])
-    df.to_excel("results.xlsx", index=False)
+        "N", "Number of new vars", "Time (inner-quadratic)", "Time (dissipative)", "Method", "Lambda"])
+    df.to_excel("results_numpy.xlsx", index=False)
+
+# def main():
+#     methods = ['Routh-Hurwitz']
+#     results = []
+
+#     for N in range(1, 5):
+#         inner_quadratic_time, dissipative_time, num_new_variables, lambda_value = compute_coupled_duffing(
+#             N, methods)
+#         results.append([N, num_new_variables, inner_quadratic_time,
+#                         dissipative_time[0], dissipative_time[1], lambda_value])
+
+#     df = pd.DataFrame(results, columns=[
+#         "N", "Number of new vars", "Time (inner-quadratic)", "Time (dissipative)", "Method", "Lambda"])
+#     df.to_excel("results_routh.xlsx", index=False)
+
 
 main()
