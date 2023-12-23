@@ -1,3 +1,7 @@
+The paper ["Dissipative quadratizations of polynomial ODE systems"](https://arxiv.org/abs/2311.02508) has been `accepted by` **30th International Conference on Tools and Algorithms for the Construction and Analysis of Systems** (TACAS2024)
+
+
+
 # DQbee
 
 `DQbee` is a python package for computing the dissipative quadratization of polynomial ODE system. 
