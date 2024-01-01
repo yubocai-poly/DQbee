@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-VERSION = '0.1.5'
+VERSION = '0.1.6'
 DESCRIPTION = 'DQode is a Python Library to compute the optimal inner-quadratic quadratization and dissipative quadratization of a given polynomial ODE system.'
 
 setup(

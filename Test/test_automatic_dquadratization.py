@@ -2,9 +2,7 @@ import sys
 sys.path.append("../DQbee/")
 # from Simulation import *
 import sympy as sp
-from DQbee.Combinations import *
-from DQbee.EquationSystem import *
-from DQbee.DQuadratization import *
+from DQbee import *
 import pytest
 import math
 import time

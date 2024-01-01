@@ -1,6 +1,4 @@
-from DQbee.DQuadratization import *
-from DQbee.EquationSystem import *
-from DQbee.Combinations import *
+from DQbee import *
 import sympy as sp
 import pandas as pd
 import sys
